@@ -1,0 +1,16 @@
+C:\Users\SEBASTIAN\Desktop\ProyectoSoftwareSeguro\ProyectoSoftwareSeguro\src\main\java\com\prestamos\gestion_prestamos\controller\CuotaController.java
+C:\Users\SEBASTIAN\Desktop\ProyectoSoftwareSeguro\ProyectoSoftwareSeguro\src\main\java\com\prestamos\gestion_prestamos\controller\PrestamoController.java
+C:\Users\SEBASTIAN\Desktop\ProyectoSoftwareSeguro\ProyectoSoftwareSeguro\src\main\java\com\prestamos\gestion_prestamos\controller\UsuarioController.java
+C:\Users\SEBASTIAN\Desktop\ProyectoSoftwareSeguro\ProyectoSoftwareSeguro\src\main\java\com\prestamos\gestion_prestamos\GestionPrestamosApplication.java
+C:\Users\SEBASTIAN\Desktop\ProyectoSoftwareSeguro\ProyectoSoftwareSeguro\src\main\java\com\prestamos\gestion_prestamos\model\Cuota.java
+C:\Users\SEBASTIAN\Desktop\ProyectoSoftwareSeguro\ProyectoSoftwareSeguro\src\main\java\com\prestamos\gestion_prestamos\model\Prestamo.java
+C:\Users\SEBASTIAN\Desktop\ProyectoSoftwareSeguro\ProyectoSoftwareSeguro\src\main\java\com\prestamos\gestion_prestamos\model\Rol.java
+C:\Users\SEBASTIAN\Desktop\ProyectoSoftwareSeguro\ProyectoSoftwareSeguro\src\main\java\com\prestamos\gestion_prestamos\model\Usuario.java
+C:\Users\SEBASTIAN\Desktop\ProyectoSoftwareSeguro\ProyectoSoftwareSeguro\src\main\java\com\prestamos\gestion_prestamos\repository\CuotaRepository.java
+C:\Users\SEBASTIAN\Desktop\ProyectoSoftwareSeguro\ProyectoSoftwareSeguro\src\main\java\com\prestamos\gestion_prestamos\repository\PrestamoRepository.java
+C:\Users\SEBASTIAN\Desktop\ProyectoSoftwareSeguro\ProyectoSoftwareSeguro\src\main\java\com\prestamos\gestion_prestamos\repository\UsuarioRepository.java
+C:\Users\SEBASTIAN\Desktop\ProyectoSoftwareSeguro\ProyectoSoftwareSeguro\src\main\java\com\prestamos\gestion_prestamos\security\SecurityConfig.java
+C:\Users\SEBASTIAN\Desktop\ProyectoSoftwareSeguro\ProyectoSoftwareSeguro\src\main\java\com\prestamos\gestion_prestamos\service\CuotaService.java
+C:\Users\SEBASTIAN\Desktop\ProyectoSoftwareSeguro\ProyectoSoftwareSeguro\src\main\java\com\prestamos\gestion_prestamos\service\PrestamoService.java
+C:\Users\SEBASTIAN\Desktop\ProyectoSoftwareSeguro\ProyectoSoftwareSeguro\src\main\java\com\prestamos\gestion_prestamos\service\RolService.java
+C:\Users\SEBASTIAN\Desktop\ProyectoSoftwareSeguro\ProyectoSoftwareSeguro\src\main\java\com\prestamos\gestion_prestamos\service\UsuarioService.java
