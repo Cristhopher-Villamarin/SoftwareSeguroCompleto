@@ -81,9 +81,12 @@ public class UsuarioController {
 
         try {
             String token = usuarioService.autenticarUsuario(correo, contrasena);
+            Usuario usuario = usuarioService.obtenerUsuarioPorCorreo(correo).orElseThrow();
 
-            // Retorna el token dentro de un JSON válido
-            return ResponseEntity.ok(Map.of("token", token));
+            return ResponseEntity.ok(Map.of(
+                    "token", token,
+                    "rol", usuario.getRol().name() // 🔥 Asegurar que se devuelva el ROL correctamente
+            ));
         } catch (RuntimeException ex) {
             return ResponseEntity.badRequest().body(Map.of("error", ex.getMessage()));
         }

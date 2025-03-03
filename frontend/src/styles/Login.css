@@ -1,0 +1,26 @@
+.cursor-pointer {
+  cursor: pointer;
+}
+
+.card {
+  background-color: white;
+  border-radius: 15px;
+  padding: 25px;
+}
+
+.btn-success {
+  background-color: #107a54;
+  border: none;
+}
+
+.btn-success:hover {
+  background-color: #1e7e34;
+}
+
+.text-success {
+  color: #218838 !important;
+}
+
+.text-success:hover {
+  text-decoration: underline;
+}

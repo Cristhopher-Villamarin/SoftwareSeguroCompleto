@@ -1,0 +1,45 @@
+/* src/styles/Registro.css */
+/* Fondo con degradado */
+
+
+.header-container {
+    background-color: #107a54; /* Color de encabezado */
+    padding: 15px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 8px 8px 0 0;
+    position: relative;
+  }
+  
+  .back-arrow {
+    position: absolute;
+    left: 20px;
+    color: white;
+    font-size: 1.5rem;
+    cursor: pointer;
+  }
+  
+  .header-title {
+    color: white;
+    font-size: 1.8rem;
+    font-weight: bold;
+    text-align: center;
+    margin: 0;
+  }
+  
+  .btn-custom {
+    background-color: #107a54;
+    color: white;
+    font-weight: bold;
+    font-size: 1.2rem;
+    padding: 12px;
+    border-radius: 8px;
+    transition: all 0.3s ease;
+  }
+  
+  .btn-custom:hover {
+    background-color: black;
+    color: #107a54;
+  }
+  
