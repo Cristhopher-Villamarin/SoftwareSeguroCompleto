@@ -1,6 +1,6 @@
 import { Link } from "react-router-dom";
 import { FaHome, FaMoneyCheckAlt, FaCalculator, FaCreditCard } from "react-icons/fa";
-import "../../styles/sidebar.css"; // Importamos los estilos
+import "../../../styles/sideBar.css"; // Importamos los estilos
 
 const SideBarUser = () => {
   return (

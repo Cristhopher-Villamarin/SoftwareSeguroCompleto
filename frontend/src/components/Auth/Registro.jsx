@@ -88,8 +88,18 @@ function Registro() {
   };
   
   return (
-    <div className="vh-100 d-flex align-items-center justify-content-center bg-gradient">
-      <div className="col-md-6">
+    <div className="container-fluid p-0">
+        <nav className="navbar navbar-expand-lg" style={{ backgroundColor: "#107a54", padding: "15px" }}>
+        <div className="container-fluid">
+          {/* Logo + Nombre ESPECITO bien a la izquierda */}
+          <div className="d-flex align-items-center ms-3">
+            <img src="/logo.png" alt="Logo" className="me-2" style={{ height: "40px" }} />
+            <span className="fs-4 fw-bold text-white">ESPECITO</span>
+          </div>
+        </div>
+      </nav> 
+     <div className="vh-100 d-flex align-items-center justify-content-center bg-gradient">
+      <div className="col-md-4">
         <div className="card shadow-lg p-4 rounded-3">
           {/* Encabezado con flecha para regresar al login */}
           <div className="header-container">
@@ -145,6 +155,8 @@ function Registro() {
         </div>
       </div>
     </div>
+    </div>
+   
   );
 }
 
