@@ -7,6 +7,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/cuotas")
@@ -19,17 +20,29 @@ public class CuotaController {
      * Obtener todas las cuotas de un préstamo.
      */
     @GetMapping("/prestamo/{idPrestamo}")
-    public ResponseEntity<List<Cuota>> obtenerCuotasPorPrestamo(@PathVariable Long idPrestamo) {
-        List<Cuota> cuotas = cuotaService.obtenerCuotasPorPrestamo(idPrestamo);
-        return ResponseEntity.ok(cuotas);
+    public ResponseEntity<?> obtenerCuotasPorPrestamo(@PathVariable Long idPrestamo) {
+        try {
+            List<Cuota> cuotas = cuotaService.obtenerCuotasPorPrestamo(idPrestamo);
+            return ResponseEntity.ok(cuotas);
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
+        } catch (Exception e) {
+            return ResponseEntity.internalServerError().body(Map.of("error", "Error inesperado en el servidor."));
+        }
     }
 
     /**
      * Registrar el pago de una cuota específica.
      */
     @PostMapping("/{idCuota}/pagar")
-    public ResponseEntity<String> pagarCuota(@PathVariable Long idCuota) {
-        cuotaService.registrarPagoCuota(idCuota);
-        return ResponseEntity.ok("Pago registrado correctamente.");
+    public ResponseEntity<?> pagarCuota(@PathVariable Long idCuota) {
+        try {
+            cuotaService.registrarPagoCuota(idCuota);
+            return ResponseEntity.ok(Map.of("mensaje", "Pago registrado correctamente."));
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
+        } catch (Exception e) {
+            return ResponseEntity.internalServerError().body(Map.of("error", "Error inesperado en el servidor."));
+        }
     }
 }

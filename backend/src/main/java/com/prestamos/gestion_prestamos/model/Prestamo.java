@@ -45,7 +45,7 @@ public class Prestamo {
     private String tipoPago; // FRANCES, ALEMAN
 
     @NotBlank(message = "El estado del préstamo es obligatorio")
-    @Pattern(regexp = "ACTIVO|CANCELADO|PENDIENTE", message = "El estado del préstamo debe ser 'ACTIVO' o 'CANCELADO' o 'PENDIENTE'")
+    @Pattern(regexp = "ACTIVO|CANCELADO|PENDIENTE|FINALIZADO", message = "El estado del préstamo debe ser 'ACTIVO' o 'CANCELADO' o 'PENDIENTE' o 'FINALIZADO'")
     private String estadoPrestamo; // ACTIVO, CANCELADO, PEDIENTE
 
     @CreationTimestamp

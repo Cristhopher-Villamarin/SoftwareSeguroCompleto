@@ -31,7 +31,7 @@ public class SecurityConfig {
         http
                 .csrf(csrf -> csrf.disable())
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/api/usuarios/registro", "/api/usuarios/login").permitAll() // Permitir sin autenticación
+                        .requestMatchers("/api/usuarios/registro", "/api/usuarios/login", "api/usuarios/registro-admin").permitAll() // Permitir sin autenticación
                         .anyRequest().authenticated() // Todas las demás rutas requieren autenticación
                 )
                 .addFilterBefore(new JwtAuthenticationFilter(jwtUtil, customUserDetailsService),

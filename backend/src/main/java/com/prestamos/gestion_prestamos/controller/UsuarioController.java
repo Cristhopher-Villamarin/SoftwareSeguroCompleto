@@ -27,6 +27,19 @@ public class UsuarioController {
     }
 
     /**
+     * Endpoint para registrar un usuario ADMIN (solo permitido para Admins).
+     */
+    @PostMapping("/registro-admin")
+    public ResponseEntity<?> registrarAdmin(@RequestBody Usuario usuario) {
+        try {
+            Usuario nuevoAdmin = usuarioService.registrarAdmin(usuario);
+            return ResponseEntity.ok(nuevoAdmin);
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
+    }
+
+    /**
      * Endpoint para obtener información de un usuario por su correo.
      */
     @GetMapping("/{correo}")
@@ -85,7 +98,7 @@ public class UsuarioController {
 
             return ResponseEntity.ok(Map.of(
                     "token", token,
-                    "rol", usuario.getRol().name() // 🔥 Asegurar que se devuelva el ROL correctamente
+                    "rol", usuario.getRol().name() //Asegurar que se devuelva el ROL correctamente
             ));
         } catch (RuntimeException ex) {
             return ResponseEntity.badRequest().body(Map.of("error", ex.getMessage()));

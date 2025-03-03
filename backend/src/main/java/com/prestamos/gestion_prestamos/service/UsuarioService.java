@@ -39,6 +39,24 @@ public class UsuarioService {
     }
 
     /**
+     * Registrar un nuevo administrador (solo permitido para usuarios con rol ADMIN).
+     */
+    public Usuario registrarAdmin(Usuario usuario) {
+        if (usuarioRepository.findByCorreo(usuario.getCorreo()).isPresent()) {
+            throw new RuntimeException("El correo ya está registrado.");
+        }
+
+        usuario.setContrasenaHash(passwordEncoder.encode(usuario.getContrasenaHash()));
+        usuario.setIntentosFallidos(0);
+        usuario.setCuentaBloqueada(false);
+        usuario.setRol(Rol.ADMIN); // 🔥 Asignar rol ADMIN
+        usuario.setIngresos(null);
+        usuario.setHistorialCred(null);
+
+        return usuarioRepository.save(usuario);
+    }
+
+    /**
      * Obtener un usuario por su correo electrónico.
      */
     public Optional<Usuario> obtenerUsuarioPorCorreo(String correo) {
