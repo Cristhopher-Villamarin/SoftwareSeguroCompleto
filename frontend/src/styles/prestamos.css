@@ -1,0 +1,9 @@
+/* Ajuste de tabla para mejor visualización */
+.table-responsive {
+    overflow-x: auto;
+  }
+  
+  .table th, .table td {
+    text-align: center;
+    vertical-align: middle;
+  }

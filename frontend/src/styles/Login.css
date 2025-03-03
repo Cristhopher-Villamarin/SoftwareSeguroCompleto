@@ -14,7 +14,7 @@
 }
 
 .btn-success:hover {
-  background-color: #1e7e34;
+  background-color: #000000;
 }
 
 .text-success {
@@ -24,3 +24,12 @@
 .text-success:hover {
   text-decoration: underline;
 }
+.header-container {
+    background-color: #107a54; /* Color de encabezado */
+    padding: 15px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 8px 8px 0 0;
+    position: relative;
+  }
