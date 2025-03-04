@@ -27,6 +27,24 @@ public class UsuarioController {
         return ResponseEntity.ok(nuevoUsuario);
     }
 
+    @PreAuthorize("hasRole('USUARIO') or hasRole('ADMIN')")
+    @PutMapping("/{correo}/actualizar-finanzas")
+    public ResponseEntity<?> actualizarDatosFinancieros(
+            @PathVariable String correo,
+            @RequestBody Map<String, Object> request) {
+
+        // Validar que el JSON tenga los campos necesarios
+        if (!request.containsKey("ingresos") || !request.containsKey("historialCred")) {
+            return ResponseEntity.badRequest().body("Faltan datos en el cuerpo de la petición.");
+        }
+
+        Double ingresos = ((Number) request.get("ingresos")).doubleValue(); // Convertir a Double
+        Integer historialCred = ((Number) request.get("historialCred")).intValue(); // Convertir a Integer
+
+        Usuario usuarioActualizado = usuarioService.actualizarDatosFinancieros(correo, ingresos, historialCred);
+        return ResponseEntity.ok(usuarioActualizado);
+    }
+
     /**
      * Endpoint para registrar un usuario ADMIN (solo permitido para Admins).
      */

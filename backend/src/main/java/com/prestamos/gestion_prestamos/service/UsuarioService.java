@@ -83,6 +83,20 @@ public class UsuarioService {
     }
 
     /**
+     * Actualizar ingresos e historial crediticio de un usuario identificado por su correo.
+     */
+    public Usuario actualizarDatosFinancieros(String correo, Double ingresos, Integer historialCred) {
+        Usuario usuario = usuarioRepository.findByCorreo(correo)
+                .orElseThrow(() -> new RuntimeException("Usuario no encontrado con correo: " + correo));
+
+        usuario.setIngresos(ingresos);
+        usuario.setHistorialCred(historialCred);
+
+        return usuarioRepository.save(usuario);
+    }
+
+
+    /**
      * Desbloquear una cuenta de usuario restableciendo los intentos fallidos.
      */
     public void desbloquearCuenta(String correo) {
