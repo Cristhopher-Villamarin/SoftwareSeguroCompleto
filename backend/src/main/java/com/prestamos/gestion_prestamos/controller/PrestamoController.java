@@ -36,10 +36,20 @@ public class PrestamoController {
     /**
      * Obtener todos los préstamos de un usuario por su cédula (solo admins).
      */
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasRole('USUARIO') or hasRole('ADMIN')")
     @GetMapping("/usuario/{cedula}")
-    public ResponseEntity<?> obtenerPrestamosPorCedula(@PathVariable String cedula) {
+    public ResponseEntity<?> obtenerPrestamosPorCedula(@PathVariable String cedula, Authentication authentication) {
         try {
+            String correoUsuarioAutenticado = authentication.getName(); // Extrae el correo del usuario autenticado
+    
+            Usuario usuarioAutenticado = usuarioService.obtenerUsuarioPorCorreo(correoUsuarioAutenticado)
+                    .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
+    
+            // Si es un USUARIO normal, asegurarse de que solo pueda ver sus propios préstamos
+            if (usuarioAutenticado.getRol() == Rol.USUARIO && !usuarioAutenticado.getCedula().equals(cedula)) {
+                return ResponseEntity.status(403).body(Map.of("error", "Acceso no autorizado"));
+            }
+    
             List<Prestamo> prestamos = prestamoService.obtenerPrestamosPorCedula(cedula);
             return ResponseEntity.ok(prestamos);
         } catch (RuntimeException e) {
@@ -48,6 +58,7 @@ public class PrestamoController {
             return ResponseEntity.internalServerError().body(Map.of("error", "Error inesperado en el servidor."));
         }
     }
+
 
     /**
      * Obtener un préstamo por su ID.
