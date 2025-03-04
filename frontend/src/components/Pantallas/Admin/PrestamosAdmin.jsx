@@ -23,7 +23,7 @@ const PrestamosAdmin = () => { // 🔹 Nombre del componente en PascalCase
               <th>Monto del Préstamo Total</th>
               <th>Monto del Préstamo Pendiente</th>
               <th>Plazo en Meses</th>
-              <th>Tipo de Pago</th>
+              <th>Tipo de Prestamo</th>
               <th>Estado del Préstamo</th>
             </tr>
           </thead>

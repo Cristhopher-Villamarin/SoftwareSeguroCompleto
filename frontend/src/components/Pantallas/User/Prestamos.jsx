@@ -4,11 +4,11 @@ import "../../../styles/prestamos.css";
 
 const Prestamos = () => {
   const [prestamos, setPrestamos] = useState([]);
-  const [error, setError] = useState(""); // Estado para manejar errores
+  const [error, setError] = useState("");
   const navigate = useNavigate();
 
   const token = localStorage.getItem("token");
-  const usuarioEmail = localStorage.getItem("correo"); // 📌 Obtener el correo del localStorage
+  const usuarioEmail = localStorage.getItem("correo"); // 📌 Obtener el correo del usuario
 
   useEffect(() => {
     if (!token || !usuarioEmail) {
@@ -16,12 +16,12 @@ const Prestamos = () => {
       return;
     }
     fetchPrestamos();
-  }, [usuarioEmail]); // Ejecutar la carga cuando el correo esté disponible
+  }, [usuarioEmail]);
 
   // 📌 Obtener los préstamos del usuario por correo
   const fetchPrestamos = async () => {
     try {
-      setError(""); // Resetear errores previos
+      setError("");
 
       const response = await fetch(
         `http://localhost:8080/api/prestamos/usuario/correo/${usuarioEmail}`,
@@ -50,10 +50,8 @@ const Prestamos = () => {
       <h1 className="text-center">Mis Préstamos</h1>
       <p className="text-center">Aquí puedes visualizar los préstamos que has solicitado.</p>
 
-      {/* Mostrar mensaje de error si ocurre */}
       {error && <p className="alert alert-danger text-center">{error}</p>}
 
-      {/* Botón para solicitar un nuevo préstamo */}
       <div className="d-flex justify-content-center mb-4">
         <button
           className="btn btn-success btn-lg"
@@ -63,7 +61,6 @@ const Prestamos = () => {
         </button>
       </div>
 
-      {/* Tabla de préstamos */}
       <div className="table-responsive">
         <table className="table table-striped table-bordered">
           <thead className="table-dark text-center">
@@ -89,8 +86,7 @@ const Prestamos = () => {
                   </td>
                   <td className="text-center">{prestamo.plazoMeses} meses</td>
                   <td className="text-center">{prestamo.tasaInteres}%</td>
-                  <td
-                    className={`text-center fw-bold ${
+                  <td className={`text-center fw-bold ${
                       prestamo.estadoPrestamo === "ACTIVO"
                         ? "text-success"
                         : prestamo.estadoPrestamo === "PENDIENTE"
@@ -103,13 +99,10 @@ const Prestamos = () => {
                     {prestamo.estadoPrestamo}
                   </td>
                   <td className="text-center">
-                    {/* Validar si `fechaSolicitud` es válida */}
                     {prestamo.fechaSolicitud
                       ? new Date(prestamo.fechaSolicitud).toLocaleDateString()
                       : "N/A"}
                   </td>
-
-                  {/* Botón para ver la tabla de amortización */}
                   <td className="text-center">
                     {prestamo.estadoPrestamo === "ACTIVO" && (
                       <button
