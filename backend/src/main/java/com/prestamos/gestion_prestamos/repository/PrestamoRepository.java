@@ -1,6 +1,7 @@
 package com.prestamos.gestion_prestamos.repository;
 
 import com.prestamos.gestion_prestamos.model.Prestamo;
+import com.prestamos.gestion_prestamos.model.Usuario;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
@@ -40,4 +41,10 @@ public interface PrestamoRepository extends JpaRepository<Prestamo, Long> {
      * Buscar todos los préstamos con un estado específico.
      */
     List<Prestamo> findByEstadoPrestamo(String estadoPrestamo);
+
+    /**
+     * Obtiene la lista de usuarios que han realizado al menos un préstamo.
+     */
+    @Query("SELECT DISTINCT p.usuario FROM Prestamo p")
+    List<Usuario> obtenerUsuariosConPrestamos();
 }

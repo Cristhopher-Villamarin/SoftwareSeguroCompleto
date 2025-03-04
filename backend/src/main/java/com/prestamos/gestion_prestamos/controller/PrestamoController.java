@@ -1,12 +1,14 @@
 package com.prestamos.gestion_prestamos.controller;
 
 import com.prestamos.gestion_prestamos.model.Prestamo;
+import com.prestamos.gestion_prestamos.model.Usuario;
 import com.prestamos.gestion_prestamos.service.PrestamoService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -112,4 +114,15 @@ public class PrestamoController {
             return ResponseEntity.internalServerError().body(Map.of("error", "Error inesperado en el servidor."));
         }
     }
+
+    /**
+     * Obtener los datos de los usuarios que han hecho un préstamo.
+     */
+    @PreAuthorize("hasRole('ADMIN') or hasRole('USUARIO')")
+    @GetMapping("/usuarios-prestamos")
+    public ResponseEntity<List<Map<String, String>>> obtenerUsuariosConPrestamos() {
+        List<Map<String, String>> usuarios = prestamoService.obtenerUsuariosConPrestamos();
+        return ResponseEntity.ok(usuarios);
+    }
+
 }

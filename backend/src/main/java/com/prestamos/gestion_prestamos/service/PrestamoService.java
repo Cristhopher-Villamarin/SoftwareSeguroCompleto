@@ -11,7 +11,10 @@ import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 @Service
 public class PrestamoService {
@@ -237,4 +240,21 @@ public class PrestamoService {
     public List<Prestamo> obtenerPrestamosPorEstado(String estadoPrestamo) {
         return prestamoRepository.findByEstadoPrestamo(estadoPrestamo);
     }
+
+    /**
+     * Obtiene los usuarios que han realizado préstamos con su información básica.
+     */
+    public List<Map<String, String>> obtenerUsuariosConPrestamos() {
+        List<Usuario> usuarios = prestamoRepository.obtenerUsuariosConPrestamos();
+
+        return usuarios.stream().map(usuario -> {
+            Map<String, String> datos = new HashMap<>();
+            datos.put("nombreCompleto", usuario.getNombre() + " " + usuario.getApellido());
+            datos.put("cedula", usuario.getCedula());
+            datos.put("direccion", usuario.getDireccion());
+            datos.put("correo", usuario.getCorreo());
+            return datos;
+        }).collect(Collectors.toList());
+    }
+
 }
