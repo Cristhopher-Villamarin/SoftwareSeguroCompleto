@@ -67,6 +67,15 @@ public class PrestamoController {
     }
 
     /**
+     * Obtener préstamos por correo
+     */
+    @PreAuthorize("hasRole('USUARIO') or hasRole('ADMIN')")
+    @GetMapping("/usuario/correo/{correo}")
+    public List<Prestamo> obtenerPrestamosPorCorreo(@PathVariable String correo) {
+        return prestamoService.obtenerPrestamosPorCorreo(correo);
+    }
+
+    /**
      * Cambiar el estado de un préstamo (solo Admin).
      * 🔹 Ahora el nuevo estado se envía en el `body`, no en la URL.
      */

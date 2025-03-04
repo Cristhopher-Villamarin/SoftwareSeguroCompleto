@@ -2,6 +2,7 @@ package com.prestamos.gestion_prestamos.security;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.ProviderManager;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
@@ -29,15 +30,20 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
-                .csrf(csrf -> csrf.disable())
+                .cors() // ✅ Habilitar CORS
+                .and()
+                .csrf(csrf -> csrf.disable()) // ❌ Deshabilitar CSRF solo si no usas formularios
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/api/usuarios/registro", "/api/usuarios/login", "api/usuarios/registro-admin").permitAll() // Permitir sin autenticación
-                        .anyRequest().authenticated() // Todas las demás rutas requieren autenticación
+                        .requestMatchers("/api/usuarios/registro",
+                                "/api/usuarios/login",
+                                "/api/usuarios/registro-admin").permitAll() // ✅ Corregido
+                        .requestMatchers(HttpMethod.GET, "/api/public/**").permitAll() // ✅ Permitir GET públicos opcionalmente
+                        .anyRequest().authenticated() // 🔒 Todo lo demás requiere autenticación
                 )
                 .addFilterBefore(new JwtAuthenticationFilter(jwtUtil, customUserDetailsService),
                         UsernamePasswordAuthenticationFilter.class)
-                .httpBasic(httpBasic -> httpBasic.disable())
-                .formLogin(form -> form.disable());
+                .httpBasic(httpBasic -> httpBasic.disable()) // 🔒 Deshabilitar autenticación básica
+                .formLogin(form -> form.disable()); // 🔒 Deshabilitar autenticación por formulario
 
         return http.build();
     }

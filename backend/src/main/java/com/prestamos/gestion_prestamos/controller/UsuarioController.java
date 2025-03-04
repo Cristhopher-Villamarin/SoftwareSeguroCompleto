@@ -5,6 +5,7 @@ import com.prestamos.gestion_prestamos.model.Usuario;
 import com.prestamos.gestion_prestamos.service.UsuarioService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.Map;
@@ -42,6 +43,7 @@ public class UsuarioController {
     /**
      * Endpoint para obtener información de un usuario por su correo.
      */
+    @PreAuthorize("hasRole('USUARIO') or hasRole('ADMIN')")
     @GetMapping("/{correo}")
     public ResponseEntity<Usuario> obtenerPorCorreo(@PathVariable String correo) {
         Optional<Usuario> usuario = usuarioService.obtenerUsuarioPorCorreo(correo);
@@ -64,6 +66,7 @@ public class UsuarioController {
     /**
      * Endpoint para desbloquear una cuenta de usuario.
      */
+    @PreAuthorize("hasRole('ADMIN')")
     @PostMapping("/desbloquear")
     public ResponseEntity<String> desbloquearCuenta(@RequestBody Map<String, String> request) {
         String correo = request.get("correo");

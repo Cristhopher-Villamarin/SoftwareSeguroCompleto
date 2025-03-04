@@ -2,8 +2,10 @@ package com.prestamos.gestion_prestamos.service;
 
 import com.prestamos.gestion_prestamos.model.Cuota;
 import com.prestamos.gestion_prestamos.model.Prestamo;
+import com.prestamos.gestion_prestamos.model.Usuario;
 import com.prestamos.gestion_prestamos.repository.CuotaRepository;
 import com.prestamos.gestion_prestamos.repository.PrestamoRepository;
+import com.prestamos.gestion_prestamos.repository.UsuarioRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -16,6 +18,10 @@ public class PrestamoService {
 
     @Autowired
     private PrestamoRepository prestamoRepository;
+
+    @Autowired
+    private UsuarioRepository usuarioRepository; // Necesario para obtener el usuario por correo
+
 
     @Autowired
     private CuotaRepository cuotaRepository;
@@ -78,12 +84,23 @@ public class PrestamoService {
     }
 
     /**
+     * Obtener los préstamos de un usuario utilizando su correo.
+     */
+    public List<Prestamo> obtenerPrestamosPorCorreo(String correo) {
+        Usuario usuario = usuarioRepository.findByCorreo(correo)
+                .orElseThrow(() -> new RuntimeException("Usuario no encontrado con correo: " + correo));
+
+        return prestamoRepository.findByUsuario_Cedula(usuario.getCedula());
+    }
+
+    /**
      * Obtener un préstamo por su ID.
      */
     public Prestamo obtenerPrestamoPorId(Long idPrestamo) {
         return prestamoRepository.findById(idPrestamo)
                 .orElseThrow(() -> new RuntimeException("Préstamo no encontrado con ID: " + idPrestamo));
     }
+
 
     /**
      * Cambiar el estado de un préstamo.

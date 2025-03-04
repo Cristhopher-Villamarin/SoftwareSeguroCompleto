@@ -2,24 +2,23 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import "bootstrap/dist/css/bootstrap.min.css";
 import { FaArrowLeft } from "react-icons/fa";
-import DOMPurify from "dompurify"; // Para sanitizar entradas y evitar XSS
-import "../../styles/Login.css"; // Importar estilos personalizados
+import DOMPurify from "dompurify";
+import { jwtDecode } from "jwt-decode"; // ✅ Importación correcta
+import "../../styles/Login.css";
 
 const Login = () => {
   const [correo, setCorreo] = useState("");
   const [contrasena, setContrasena] = useState("");
   const [error, setError] = useState("");
-  const [isSubmitting, setIsSubmitting] = useState(false); // Para evitar múltiples envíos
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const navigate = useNavigate();
 
-  // Función para sanitizar inputs y prevenir ataques XSS
   const sanitizeInput = (input) => DOMPurify.sanitize(input.trim());
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");
 
-    // Validaciones previas
     if (!correo || !contrasena) {
       setError("Todos los campos son obligatorios.");
       return;
@@ -45,10 +44,16 @@ const Login = () => {
       }
 
       const data = await response.json();
-      localStorage.setItem("token", data.token);
+      const token = data.token;
+
+      // 📌 Decodificar el token para obtener el correo (sub)
+      const decodedToken = jwtDecode(token);
+      const correoDecodificado = decodedToken.sub;
+
+      // 📌 Almacenar en localStorage
+      localStorage.setItem("token", token);
       localStorage.setItem("rol", data.rol);
-      localStorage.setItem("idUsuario", data.idUsuario); // ✅ Guardar ID del usuario
-      localStorage.setItem("cedula", data.cedula); // ✅ Guardar la cédula del usuario
+      localStorage.setItem("correo", correoDecodificado);
 
       // Redirigir según el rol del usuario
       navigate(data.rol === "USUARIO" ? "/user/home" : "/admin/dashboard");

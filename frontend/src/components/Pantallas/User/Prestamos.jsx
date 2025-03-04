@@ -7,25 +7,28 @@ const Prestamos = () => {
   const [error, setError] = useState(""); // Estado para manejar errores
   const navigate = useNavigate();
 
-  const usuarioCedula = localStorage.getItem("cedula");
   const token = localStorage.getItem("token");
+  const usuarioEmail = localStorage.getItem("correo"); // 📌 Obtener el correo del localStorage
 
-  // Si el usuario no tiene sesión iniciada, redirigir al login
   useEffect(() => {
-    if (!usuarioCedula || !token) {
+    if (!token || !usuarioEmail) {
       navigate("/auth/login");
+      return;
     }
-  }, [usuarioCedula, token, navigate]);
+    fetchPrestamos();
+  }, [usuarioEmail]); // Ejecutar la carga cuando el correo esté disponible
 
+  // 📌 Obtener los préstamos del usuario por correo
   const fetchPrestamos = async () => {
     try {
       setError(""); // Resetear errores previos
+
       const response = await fetch(
-        `http://localhost:8080/api/prestamos/usuario/${usuarioCedula}`,
+        `http://localhost:8080/api/prestamos/usuario/correo/${usuarioEmail}`,
         {
           method: "GET",
           headers: {
-            "Authorization": `Bearer ${localStorage.getItem("token")}`,
+            Authorization: `Bearer ${token}`,
             "Content-Type": "application/json",
           },
         }
@@ -41,12 +44,6 @@ const Prestamos = () => {
       setError(error.message);
     }
   };
-
-  useEffect(() => {
-    if (usuarioCedula) {
-      fetchPrestamos();
-    }
-  }, [usuarioCedula]);
 
   return (
     <div className="container-fluid">
