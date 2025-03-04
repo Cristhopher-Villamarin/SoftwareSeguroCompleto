@@ -19,6 +19,7 @@ public class CuotaController {
     /**
      * Obtener todas las cuotas de un préstamo.
      */
+    @PreAuthorize("hasRole('USUARIO')")
     @GetMapping("/prestamo/{idPrestamo}")
     public ResponseEntity<?> obtenerCuotasPorPrestamo(@PathVariable Long idPrestamo) {
         try {
@@ -34,6 +35,7 @@ public class CuotaController {
     /**
      * Registrar el pago de una cuota específica.
      */
+    @PreAuthorize("hasRole('USUARIO')")
     @PostMapping("/{idCuota}/pagar")
     public ResponseEntity<?> pagarCuota(@PathVariable Long idCuota) {
         try {
