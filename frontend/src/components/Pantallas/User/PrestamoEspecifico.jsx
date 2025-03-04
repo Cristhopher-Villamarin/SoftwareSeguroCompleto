@@ -1,72 +1,73 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import "../../../styles/prestamoespecifico.css"; // Importamos los estilos
+import "../../../styles/prestamoespecifico.css";
 
 const PrestamoEspecifico = () => {
-  const [ingresos, setIngresos] = useState("");
   const [montoSolicitado, setMontoSolicitado] = useState("");
   const [plazoMeses, setPlazoMeses] = useState("6");
   const [tipoPago, setTipoPago] = useState("FRANCES");
   const [detallePrestamo, setDetallePrestamo] = useState(null);
+  const [idPrestamo, setIdPrestamo] = useState(null);
+  const [error, setError] = useState("");
 
   const navigate = useNavigate();
-
-  // Tasa de interés fija (podría obtenerse del backend)
   const tasaInteresAnual = 15.6; // % anual
 
-  const calcularPrestamo = () => {
-    if (!montoSolicitado || !ingresos) {
-      alert("Por favor, ingresa todos los datos.");
+  const crearPrestamo = async () => {
+    setError("");
+
+    if (!montoSolicitado) {
+      setError("Por favor, ingresa el monto solicitado.");
       return;
     }
 
-    const tasaMensual = tasaInteresAnual / 12 / 100;
-    const monto = parseFloat(montoSolicitado);
-    const meses = parseInt(plazoMeses, 10);
+    try {
+      const response = await fetch("http://localhost:8080/api/prestamos", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${localStorage.getItem("token")}`,
+        },
+        body: JSON.stringify({
+          montoSolicitado: parseFloat(montoSolicitado),
+          plazoMeses: parseInt(plazoMeses, 10),
+          tipoPago,
+          tasaInteres: tasaInteresAnual,
+          estadoPrestamo: "PENDIENTE",
+          usuario: {
+            idUsuario: localStorage.getItem("idUsuario"),
+          },
+        }),
+      });
 
-    let cuotaMensual = 0;
-    let totalInteres = 0;
-    let totalPagar = 0;
+      if (!response.ok) {
+        const data = await response.json();
+        throw new Error(data.error || "Error al registrar el préstamo.");
+      }
 
-    if (tipoPago === "FRANCES") {
-      // Fórmula de cuota fija (sistema Francés)
-      cuotaMensual = (monto * tasaMensual) / (1 - Math.pow(1 + tasaMensual, -meses));
-      totalPagar = cuotaMensual * meses;
-      totalInteres = totalPagar - monto;
-    } else {
-      // Sistema Alemán (cuotas decrecientes)
-      totalInteres = monto * tasaMensual * meses;
-      totalPagar = monto + totalInteres;
-      cuotaMensual = totalPagar / meses;
+      const data = await response.json();
+      setIdPrestamo(data.idPrestamo);
+      setDetallePrestamo({
+        montoSolicitado: data.montoSolicitado,
+        plazoMeses: data.plazoMeses,
+        tasaInteres: data.tasaInteres,
+        montoTotal: data.montoTotal.toFixed(2),
+        montoPendiente: data.montoPendiente.toFixed(2),
+      });
+
+      // ✅ Guardar ID en localStorage
+      localStorage.setItem("idPrestamo", data.idPrestamo);
+    } catch (error) {
+      setError(error.message);
     }
-
-    setDetallePrestamo({
-      cuotaMensual: cuotaMensual.toFixed(2),
-      totalInteres: totalInteres.toFixed(2),
-      totalPagar: totalPagar.toFixed(2),
-      capital: monto.toFixed(2),
-      tasaInteresAnual,
-      plazoMeses,
-    });
   };
 
   return (
     <div className="container-fluid">
-      {/* Formulario */}
       <div className="formulario">
-        <h2 className="text-center">Simula tu Préstamo</h2>
+        <h2 className="text-center">Solicitar Préstamo</h2>
 
-        <div className="mb-3">
-          <label className="form-label">Ingresos Mensuales</label>
-          <input
-            type="number"
-            className="form-control"
-            value={ingresos}
-            onChange={(e) => setIngresos(e.target.value)}
-            min="300"
-            required
-          />
-        </div>
+        {error && <p className="alert alert-danger text-center">{error}</p>}
 
         <div className="mb-3">
           <label className="form-label">¿Cuánto dinero necesitas?</label>
@@ -109,21 +110,30 @@ const PrestamoEspecifico = () => {
           </div>
         </div>
 
-        <button className="btn btn-success w-100" onClick={calcularPrestamo}>
-          Calcular
+        <button className="btn btn-success w-100" onClick={crearPrestamo}>
+          Solicitar Préstamo
         </button>
       </div>
 
-      {/* Resultado de la simulación */}
       {detallePrestamo && (
         <div className="resultado">
           <h2 className="text-center">Detalle del Préstamo</h2>
-          <p className="detalle">Cuota Mensual: <strong>${detallePrestamo.cuotaMensual}</strong></p>
+          <p className="detalle">Monto Solicitado: <strong>${detallePrestamo.montoSolicitado}</strong></p>
           <p className="detalle">Plazo: <strong>{detallePrestamo.plazoMeses} meses</strong></p>
-          <p className="detalle">Capital: <strong>${detallePrestamo.capital}</strong></p>
-          <p className="detalle">Total de Intereses: <strong>${detallePrestamo.totalInteres}</strong></p>
-          <p className="detalle">Total a Pagar: <strong>${detallePrestamo.totalPagar}</strong></p>
-          <p className="text-muted">Valores referenciales, no representan una oferta formal de préstamo.</p>
+          <p className="detalle">Tasa de Interés: <strong>{detallePrestamo.tasaInteres}%</strong></p>
+          <p className="detalle">Monto Total: <strong>${detallePrestamo.montoTotal}</strong></p>
+          <p className="detalle">Monto Pendiente: <strong>${detallePrestamo.montoPendiente}</strong></p>
+
+          {/* ✅ Enlace solo disponible si el idPrestamo existe */}
+          <div className="text-center mt-3">
+            <button
+              className="btn btn-link text-primary fw-bold"
+              onClick={() => navigate(`/user/amortizacion/${idPrestamo}`)}
+              disabled={!idPrestamo}
+            >
+              Visualizar Tabla de Amortización
+            </button>
+          </div>
         </div>
       )}
     </div>

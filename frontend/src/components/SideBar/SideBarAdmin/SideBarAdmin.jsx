@@ -7,29 +7,29 @@ const SideBarUser = () => {
     <div className="sidebar">
       <div className="sidebar-header">
         <h2>ESPECITO</h2>
-        <p className="role">Usuario</p>
-        <span className="text-muted">Solicitud de préstamo</span>
+        <p className="role">Administrador</p>
+        <span className="text-muted">Gestión de préstamo</span>
       </div>
 
       <ul className="sidebar-menu">
         <li>
-          <Link to="/user/home">
-            <FaHome className="icon" /> Home
+          <Link to="/admin/prestatarios">
+            <FaMoneyCheckAlt className="icon" /> Prestatarios
           </Link>
         </li>
         <li>
-          <Link to="/user/prestamos">
-            <FaMoneyCheckAlt className="icon" /> Préstamos
+          <Link to="/admin/prestamosAdmin">
+            <FaCalculator className="icon" /> Prestamos
           </Link>
         </li>
         <li>
-          <Link to={`/user/amortizacion/${localStorage.getItem("idPrestamo")}`}>
-            <FaCalculator className="icon" /> Tabla de Amortización
+          <Link to="/admin/pagosAdmin">
+            <FaCreditCard className="icon" /> Pagos
           </Link>
         </li>
         <li>
-          <Link to="/user/pagos">
-            <FaCreditCard className="icon" /> Historial de Pagos
+          <Link to="/admin/solicitudesAdmin">
+            <FaCreditCard className="icon" /> Solicitudes
           </Link>
         </li>
       </ul>

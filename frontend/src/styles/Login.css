@@ -1,22 +1,32 @@
+/* Estilos generales */
 .cursor-pointer {
   cursor: pointer;
 }
 
+/* Tarjeta de inicio de sesión */
 .card {
   background-color: white;
   border-radius: 15px;
   padding: 25px;
 }
 
-.btn-success {
+/* Botón de inicio de sesión */
+.btn-custom {
   background-color: #107a54;
-  border: none;
+  color: white;
+  font-weight: bold;
+  font-size: 1.2rem;
+  padding: 12px;
+  border-radius: 8px;
+  transition: all 0.3s ease;
 }
 
-.btn-success:hover {
-  background-color: #000000;
+.btn-custom:hover {
+  background-color: black;
+  color: #107a54;
 }
 
+/* Texto de registro */
 .text-success {
   color: #218838 !important;
 }
@@ -24,12 +34,35 @@
 .text-success:hover {
   text-decoration: underline;
 }
+
+/* Encabezado con flecha de regreso */
 .header-container {
-    background-color: #107a54; /* Color de encabezado */
-    padding: 15px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    border-radius: 8px 8px 0 0;
-    position: relative;
-  }
+  background-color: #107a54;
+  padding: 15px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 8px 8px 0 0;
+  position: relative;
+}
+
+.header-title {
+  color: white;
+  font-size: 1.8rem;
+  font-weight: bold;
+  text-align: center;
+  margin: 0;
+}
+
+/* Flecha de regreso */
+.back-arrow {
+  position: absolute;
+  left: 20px;
+  color: white;
+  font-size: 1.5rem;
+  cursor: pointer;
+}
+
+.back-arrow:hover {
+  color: #0a5d3a;
+}

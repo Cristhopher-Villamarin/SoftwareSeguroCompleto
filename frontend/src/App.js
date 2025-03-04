@@ -8,6 +8,15 @@ import HomeUser from "./components/Pantallas/User/HomeUser";
 import UserLayout from "./components/Layouts/UserLayout";
 import Prestamos from "./components/Pantallas/User/Prestamos";
 import PrestamoEspecifico from "./components/Pantallas/User/PrestamoEspecifico";
+import Pagos from "./components/Pantallas/User/Pagos";
+import Amortizacion from "./components/Pantallas/User/Amortizacion";
+import SideBarAdmin from "./components/SideBar/SideBarAdmin/SideBarAdmin";
+import Prestatarios from "./components/Pantallas/Admin/Prestamos/Prestatarios";
+import AdminLayout from "./components/Layouts/AdminLayout"; // ✅ Correcto
+
+import PagosAdmin from "./components/Pantallas/Admin/PagosAdmin";
+import PrestamosAdmin from "./components/Pantallas/Admin/PrestamosAdmin";
+import SolicitudesAdmin from "./components/Pantallas/Admin/SolicitudesAdmin";
 
 function App() {
   const [isAuthenticated, setIsAuthenticated] = useState(false); // Estado de autenticación
@@ -35,10 +44,24 @@ function App() {
           <Route path="home" element={<HomeUser />} />
           <Route path="prestamos" element={<Prestamos />} />
           <Route path="prestamo/nuevo" element={<PrestamoEspecifico />} />
-          <Route path="amortizacion" element={<h1>Tabla de Amortización</h1>} />
-          <Route path="pagos" element={<h1>Página de Pagos</h1>} />
+          <Route path="amortizacion/:idPrestamo" element={<Amortizacion />} />
+          <Route path="pagos" element={<Pagos />} />
         </Route>
         )}
+        
+        {/* Rutas con Sidebar (Solo visibles si el usuario está autenticado) */}
+        {isAuthenticated && (
+          <Route path="/admin/*" element={<AdminLayout />}>
+          <Route path="prestatarios" element={<Prestatarios/>} />
+          <Route path="pagosAdmin" element={<PagosAdmin/>} />
+          <Route path="prestamosAdmin" element={<PrestamosAdmin/>} />
+          <Route path="solicitudesAdmin" element={<SolicitudesAdmin />} />
+
+        </Route>
+        )}
+        
+        
+       
       </Routes>
     </Router>
   );
