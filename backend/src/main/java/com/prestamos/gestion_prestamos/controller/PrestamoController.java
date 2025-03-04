@@ -38,18 +38,8 @@ public class PrestamoController {
      */
     @PreAuthorize("hasRole('USUARIO') or hasRole('ADMIN')")
     @GetMapping("/usuario/{cedula}")
-    public ResponseEntity<?> obtenerPrestamosPorCedula(@PathVariable String cedula, Authentication authentication) {
+    public ResponseEntity<?> obtenerPrestamosPorCedula(@PathVariable String cedula) {
         try {
-            String correoUsuarioAutenticado = authentication.getName(); // Extrae el correo del usuario autenticado
-    
-            Usuario usuarioAutenticado = usuarioService.obtenerUsuarioPorCorreo(correoUsuarioAutenticado)
-                    .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
-    
-            // Si es un USUARIO normal, asegurarse de que solo pueda ver sus propios préstamos
-            if (usuarioAutenticado.getRol() == Rol.USUARIO && !usuarioAutenticado.getCedula().equals(cedula)) {
-                return ResponseEntity.status(403).body(Map.of("error", "Acceso no autorizado"));
-            }
-    
             List<Prestamo> prestamos = prestamoService.obtenerPrestamosPorCedula(cedula);
             return ResponseEntity.ok(prestamos);
         } catch (RuntimeException e) {
