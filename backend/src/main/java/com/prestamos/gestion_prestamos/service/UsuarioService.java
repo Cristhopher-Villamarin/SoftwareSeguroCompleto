@@ -131,4 +131,15 @@ public class UsuarioService {
         // 🔥 Generar y devolver token JWT
         return jwtUtil.generarToken(usuario.getCorreo());
     }
+    public void eliminarUsuario(String correo) {
+        Optional<Usuario> usuario = usuarioRepository.findByCorreo(correo);
+
+        if (usuario.isEmpty()) {
+            throw new RuntimeException("Usuario no encontrado.");
+        }
+
+        usuarioRepository.delete(usuario.get());
+    }
+
+
 }

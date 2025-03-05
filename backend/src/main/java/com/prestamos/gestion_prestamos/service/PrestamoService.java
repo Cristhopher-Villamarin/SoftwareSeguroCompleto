@@ -253,6 +253,7 @@ public class PrestamoService {
             datos.put("cedula", usuario.getCedula());
             datos.put("direccion", usuario.getDireccion());
             datos.put("correo", usuario.getCorreo());
+            datos.put("cuentaBloqueada", usuario.getCuentaBloqueada() ? "Sí" : "No");
             return datos;
         }).collect(Collectors.toList());
     }

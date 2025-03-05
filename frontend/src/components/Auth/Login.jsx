@@ -54,6 +54,7 @@ const Login = () => {
       localStorage.setItem("token", token);
       localStorage.setItem("rol", data.rol);
       localStorage.setItem("correo", correoDecodificado);
+      
 
       // Redirigir según el rol del usuario
       navigate(data.rol === "USUARIO" ? "/user/home" : "/admin/dashboard");

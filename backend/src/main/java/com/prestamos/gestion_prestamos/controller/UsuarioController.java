@@ -125,5 +125,19 @@ public class UsuarioController {
             return ResponseEntity.badRequest().body(Map.of("error", ex.getMessage()));
         }
     }
+    /**
+     * Endpoint para eliminar un usuario por su correo.
+     */
+    @PreAuthorize("hasRole('ADMIN')")
+    @DeleteMapping("/{correo}")
+    public ResponseEntity<String> eliminarUsuario(@PathVariable String correo) {
+        try {
+            usuarioService.eliminarUsuario(correo);
+            return ResponseEntity.ok("Usuario eliminado exitosamente.");
+        } catch (RuntimeException ex) {
+            return ResponseEntity.badRequest().body(ex.getMessage());
+        }
+    }
+
 
 }
