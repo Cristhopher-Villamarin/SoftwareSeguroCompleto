@@ -1,25 +1,78 @@
 import React, { useEffect, useState } from "react";
+import { jwtDecode } from "jwt-decode";
 
 const Pagos = () => {
   const [pagos, setPagos] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
+  // ✅ Decodificar el token para obtener el correo del usuario
+  const obtenerCorreoDesdeToken = () => {
+    const token = localStorage.getItem("token");
+    try {
+      if (!token) throw new Error("No hay token disponible.");
+      const decodedToken = jwtDecode(token);
+      if (!decodedToken.sub) throw new Error("El token no contiene el campo 'sub'.");
+      return decodedToken.sub; // El correo está en "sub"
+    } catch (error) {
+      setError("Error al decodificar el token: " + error.message);
+      return null;
+    }
+  };
+
+  // ✅ Obtener los pagos del préstamo activo
   useEffect(() => {
     const obtenerPagos = async () => {
       setError("");
-      try {
-        const response = await fetch(`http://localhost:8080/api/cuotas/prestamo/${localStorage.getItem("idPrestamo")}`, {
-          headers: {
-            "Authorization": `Bearer ${localStorage.getItem("token")}`
-          }
-        });
+      const correo = obtenerCorreoDesdeToken();
+      if (!correo) {
+        setLoading(false);
+        return;
+      }
 
-        if (!response.ok) {
+      try {
+        // Obtener los préstamos del usuario
+        const prestamoResponse = await fetch(
+          `http://localhost:8080/api/prestamos/usuario/correo/${correo}`,
+          {
+            headers: {
+              Authorization: `Bearer ${localStorage.getItem("token")}`,
+            },
+          }
+        );
+
+        if (!prestamoResponse.ok) {
+          throw new Error("No se pudo obtener los datos del préstamo.");
+        }
+
+        const prestamosData = await prestamoResponse.json();
+        if (prestamosData.length === 0) {
+          throw new Error("No se encontraron préstamos para este usuario.");
+        }
+
+        // Buscar el préstamo con estado "ACTIVO"
+        const prestamoActivo = prestamosData.find(
+          (p) => p.estadoPrestamo === "ACTIVO"
+        );
+        if (!prestamoActivo) {
+          throw new Error("No tienes un préstamo activo actualmente.");
+        }
+
+        // Obtener las cuotas del préstamo activo
+        const cuotasResponse = await fetch(
+          `http://localhost:8080/api/cuotas/prestamo/${prestamoActivo.idPrestamo}`,
+          {
+            headers: {
+              Authorization: `Bearer ${localStorage.getItem("token")}`,
+            },
+          }
+        );
+
+        if (!cuotasResponse.ok) {
           throw new Error("No se pudo obtener el historial de pagos.");
         }
 
-        const data = await response.json();
+        const data = await cuotasResponse.json();
 
         // Filtrar solo las cuotas pagadas
         const pagosRealizados = data.filter((cuota) => cuota.estado === "Pagada");
@@ -46,7 +99,10 @@ const Pagos = () => {
         <div className="list-group">
           {pagos.length > 0 ? (
             pagos.map((pago, index) => (
-              <div key={index} className="list-group-item d-flex justify-content-between align-items-center">
+              <div
+                key={index}
+                className="list-group-item d-flex justify-content-between align-items-center"
+              >
                 <div>
                   <h5>Pago de Cuota #{pago.numeroCuota}</h5>
                   <p>{pago.fechaPago ? pago.fechaPago : "Fecha no disponible"}</p>

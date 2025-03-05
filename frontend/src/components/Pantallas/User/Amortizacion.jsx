@@ -1,34 +1,83 @@
 import React, { useEffect, useState } from "react";
-import { useParams } from "react-router-dom";
+import { jwtDecode } from "jwt-decode";
 
 const Amortizacion = () => {
-  const { idPrestamo } = useParams();
   const [cuotas, setCuotas] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [cuotaSeleccionada, setCuotaSeleccionada] = useState(null);
-  const [montoPendiente, setMontoPendiente] = useState(null); // 🔥 Nuevo estado para el saldo pendiente
+  const [montoPendiente, setMontoPendiente] = useState(null);
 
+  // ✅ Decodificar el token para obtener el correo del usuario
+  const obtenerCorreoDesdeToken = () => {
+    const token = localStorage.getItem("token");
+    try {
+      if (!token) throw new Error("No hay token disponible.");
+      const decodedToken = jwtDecode(token);
+      if (!decodedToken.sub) throw new Error("El token no contiene el campo 'sub'.");
+      return decodedToken.sub; // El correo está en "sub"
+    } catch (error) {
+      setError("Error al decodificar el token: " + error.message);
+      return null;
+    }
+  };
+
+  // ✅ Obtener las cuotas y el monto pendiente del préstamo activo
   useEffect(() => {
-    const obtenerCuotas = async () => {
-      try {
-        const response = await fetch(`http://localhost:8080/api/cuotas/prestamo/${idPrestamo}`, {
-          headers: {
-            "Authorization": `Bearer ${localStorage.getItem("token")}`
-          }
-        });
+    const fetchData = async () => {
+      const correo = obtenerCorreoDesdeToken();
+      if (!correo) {
+        setLoading(false);
+        return;
+      }
 
-        if (!response.ok) {
+      try {
+        // Obtener los préstamos del usuario
+        const prestamoResponse = await fetch(
+          `http://localhost:8080/api/prestamos/usuario/correo/${correo}`,
+          {
+            headers: {
+              Authorization: `Bearer ${localStorage.getItem("token")}`,
+            },
+          }
+        );
+
+        if (!prestamoResponse.ok) {
+          throw new Error("No se pudo obtener los datos del préstamo.");
+        }
+
+        const prestamosData = await prestamoResponse.json();
+        if (prestamosData.length === 0) {
+          throw new Error("No se encontraron préstamos para este usuario.");
+        }
+
+        // Buscar el préstamo con estado "ACTIVO"
+        const prestamoActivo = prestamosData.find(
+          (p) => p.estadoPrestamo === "ACTIVO"
+        );
+        if (!prestamoActivo) {
+          throw new Error("No tienes un préstamo activo actualmente.");
+        }
+
+        // Establecer el monto pendiente del préstamo activo
+        setMontoPendiente(prestamoActivo.montoPendiente);
+
+        // Obtener las cuotas del préstamo activo
+        const cuotasResponse = await fetch(
+          `http://localhost:8080/api/cuotas/prestamo/${prestamoActivo.idPrestamo}`,
+          {
+            headers: {
+              Authorization: `Bearer ${localStorage.getItem("token")}`,
+            },
+          }
+        );
+
+        if (!cuotasResponse.ok) {
           throw new Error("No se pudo obtener las cuotas.");
         }
 
-        const data = await response.json();
-        setCuotas(data);
-
-        // 🔥 Obtener el monto pendiente del préstamo desde la primera cuota
-        if (data.length > 0) {
-          setMontoPendiente(data[0].prestamo.montoPendiente);
-        }
+        const cuotasData = await cuotasResponse.json();
+        setCuotas(cuotasData);
       } catch (error) {
         setError(error.message);
       } finally {
@@ -36,8 +85,8 @@ const Amortizacion = () => {
       }
     };
 
-    obtenerCuotas();
-  }, [idPrestamo]);
+    fetchData();
+  }, []); // No depende de idPrestamoParam, ya que buscamos el activo
 
   // ✅ Función para pagar una cuota
   const pagarCuota = async (idCuota) => {
@@ -46,7 +95,7 @@ const Amortizacion = () => {
       const response = await fetch(`http://localhost:8080/api/cuotas/${idCuota}/pagar`, {
         method: "POST",
         headers: {
-          "Authorization": `Bearer ${localStorage.getItem("token")}`,
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
           "Content-Type": "application/json",
         },
       });
@@ -56,15 +105,19 @@ const Amortizacion = () => {
         throw new Error(data.error || "Error al pagar la cuota.");
       }
 
-      // ✅ Actualizar la tabla marcando la cuota como pagada
-      setCuotas(cuotas.map(cuota =>
-        cuota.idCuota === idCuota ? { ...cuota, estado: "Pagada", fechaPago: new Date().toISOString().split('T')[0] } : cuota
-      ));
+      // Actualizar la tabla marcando la cuota como pagada
+      setCuotas((prevCuotas) =>
+        prevCuotas.map((cuota) =>
+          cuota.idCuota === idCuota
+            ? { ...cuota, estado: "Pagada", fechaPago: new Date().toISOString().split("T")[0] }
+            : cuota
+        )
+      );
 
-      // 🔥 Actualizar el saldo pendiente restando el monto de la cuota pagada
-      const cuotaPagada = cuotas.find(c => c.idCuota === idCuota);
+      // Actualizar el monto pendiente restando el monto de la cuota pagada
+      const cuotaPagada = cuotas.find((c) => c.idCuota === idCuota);
       if (cuotaPagada) {
-        setMontoPendiente(prev => Math.max(0, prev - cuotaPagada.montoTotalCuota));
+        setMontoPendiente((prev) => Math.max(0, prev - cuotaPagada.montoTotalCuota));
       }
 
       setCuotaSeleccionada(null);
@@ -83,10 +136,13 @@ const Amortizacion = () => {
         <h3 className="text-center">Cargando...</h3>
       ) : (
         <>
-          {/* 🔥 Mostrar el saldo pendiente */}
+          {/* Mostrar el saldo pendiente */}
           {montoPendiente !== null && (
             <div className="text-center mb-3">
-              <h5>Saldo Pendiente: <span className="fw-bold text-danger">${montoPendiente.toFixed(2)}</span></h5>
+              <h5>
+                Saldo Pendiente:{" "}
+                <span className="fw-bold text-danger">${montoPendiente.toFixed(2)}</span>
+              </h5>
             </div>
           )}
 
@@ -116,13 +172,24 @@ const Amortizacion = () => {
                     <td>${cuota.interesCuota.toFixed(2)}</td>
                     <td>${cuota.montoTotalCuota.toFixed(2)}</td>
                     <td>
-                      <span className={`badge ${cuota.estado === "Pagada" ? "bg-success" : cuota.estado === "Mora" ? "bg-danger" : "bg-warning"}`}>
+                      <span
+                        className={`badge ${
+                          cuota.estado === "Pagada"
+                            ? "bg-success"
+                            : cuota.estado === "Mora"
+                            ? "bg-danger"
+                            : "bg-warning"
+                        }`}
+                      >
                         {cuota.estado}
                       </span>
                     </td>
                     <td>
                       {cuota.estado === "Pendiente" && (
-                        <button className="btn btn-primary btn-sm" onClick={() => setCuotaSeleccionada(cuota)}>
+                        <button
+                          className="btn btn-primary btn-sm"
+                          onClick={() => setCuotaSeleccionada(cuota)}
+                        >
                           Pagar
                         </button>
                       )}
@@ -140,9 +207,19 @@ const Amortizacion = () => {
         <div className="modal-backdrop">
           <div className="modal-content">
             <h4>¿Deseas pagar esta cuota?</h4>
-            <p>Cuota #{cuotaSeleccionada.numeroCuota} - Monto: ${cuotaSeleccionada.montoTotalCuota.toFixed(2)}</p>
-            <button className="btn btn-success" onClick={() => pagarCuota(cuotaSeleccionada.idCuota)}>Confirmar</button>
-            <button className="btn btn-secondary" onClick={() => setCuotaSeleccionada(null)}>Cancelar</button>
+            <p>
+              Cuota #{cuotaSeleccionada.numeroCuota} - Monto: $
+              {cuotaSeleccionada.montoTotalCuota.toFixed(2)}
+            </p>
+            <button
+              className="btn btn-success"
+              onClick={() => pagarCuota(cuotaSeleccionada.idCuota)}
+            >
+              Confirmar
+            </button>
+            <button className="btn btn-secondary" onClick={() => setCuotaSeleccionada(null)}>
+              Cancelar
+            </button>
           </div>
         </div>
       )}
