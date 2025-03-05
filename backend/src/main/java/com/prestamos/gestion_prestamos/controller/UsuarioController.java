@@ -1,6 +1,5 @@
 package com.prestamos.gestion_prestamos.controller;
 
-
 import com.prestamos.gestion_prestamos.model.Usuario;
 import com.prestamos.gestion_prestamos.service.UsuarioService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -18,9 +17,6 @@ public class UsuarioController {
     @Autowired
     private UsuarioService usuarioService;
 
-    /**
-     * Endpoint para registrar un nuevo usuario.
-     */
     @PostMapping("/registro")
     public ResponseEntity<Usuario> registrar(@RequestBody Usuario usuario) {
         Usuario nuevoUsuario = usuarioService.registrarUsuario(usuario);
@@ -33,21 +29,17 @@ public class UsuarioController {
             @PathVariable String correo,
             @RequestBody Map<String, Object> request) {
 
-        // Validar que el JSON tenga los campos necesarios
         if (!request.containsKey("ingresos") || !request.containsKey("historialCred")) {
             return ResponseEntity.badRequest().body("Faltan datos en el cuerpo de la petición.");
         }
 
-        Double ingresos = ((Number) request.get("ingresos")).doubleValue(); // Convertir a Double
-        Integer historialCred = ((Number) request.get("historialCred")).intValue(); // Convertir a Integer
+        Double ingresos = ((Number) request.get("ingresos")).doubleValue();
+        Integer historialCred = ((Number) request.get("historialCred")).intValue();
 
         Usuario usuarioActualizado = usuarioService.actualizarDatosFinancieros(correo, ingresos, historialCred);
         return ResponseEntity.ok(usuarioActualizado);
     }
 
-    /**
-     * Endpoint para registrar un usuario ADMIN (solo permitido para Admins).
-     */
     @PostMapping("/registro-admin")
     public ResponseEntity<?> registrarAdmin(@RequestBody Usuario usuario) {
         try {
@@ -58,9 +50,6 @@ public class UsuarioController {
         }
     }
 
-    /**
-     * Endpoint para obtener información de un usuario por su correo.
-     */
     @PreAuthorize("hasRole('USUARIO') or hasRole('ADMIN')")
     @GetMapping("/{correo}")
     public ResponseEntity<Usuario> obtenerPorCorreo(@PathVariable String correo) {
@@ -68,9 +57,6 @@ public class UsuarioController {
         return usuario.map(ResponseEntity::ok).orElseGet(() -> ResponseEntity.notFound().build());
     }
 
-    /**
-     * Endpoint para registrar un intento fallido de inicio de sesión.
-     */
     @PostMapping("/login-fallido")
     public ResponseEntity<String> registrarIntentoFallido(@RequestParam String correo) {
         try {
@@ -81,9 +67,6 @@ public class UsuarioController {
         }
     }
 
-    /**
-     * Endpoint para desbloquear una cuenta de usuario.
-     */
     @PreAuthorize("hasRole('ADMIN')")
     @PostMapping("/desbloquear")
     public ResponseEntity<String> desbloquearCuenta(@RequestBody Map<String, String> request) {
@@ -94,6 +77,9 @@ public class UsuarioController {
         }
 
         try {
+            Usuario usuario = usuarioService.obtenerUsuarioPorCorreo(correo)
+                    .orElseThrow(() -> new RuntimeException("Usuario no encontrado."));
+
             usuarioService.desbloquearCuenta(correo);
             return ResponseEntity.ok("Cuenta desbloqueada exitosamente.");
         } catch (RuntimeException ex) {
@@ -101,9 +87,6 @@ public class UsuarioController {
         }
     }
 
-    /**
-     * Endpoint para autenticar un usuario (puede integrarse con JWT).
-     */
     @PostMapping("/login")
     public ResponseEntity<Map<String, String>> autenticar(@RequestBody Map<String, String> request) {
         String correo = request.get("correo");
@@ -115,19 +98,12 @@ public class UsuarioController {
 
         try {
             String token = usuarioService.autenticarUsuario(correo, contrasena);
-            Usuario usuario = usuarioService.obtenerUsuarioPorCorreo(correo).orElseThrow();
-
-            return ResponseEntity.ok(Map.of(
-                    "token", token,
-                    "rol", usuario.getRol().name() //Asegurar que se devuelva el ROL correctamente
-            ));
+            return ResponseEntity.ok(Map.of("token", token));
         } catch (RuntimeException ex) {
             return ResponseEntity.badRequest().body(Map.of("error", ex.getMessage()));
         }
     }
-    /**
-     * Endpoint para eliminar un usuario por su correo.
-     */
+
     @PreAuthorize("hasRole('ADMIN')")
     @DeleteMapping("/{correo}")
     public ResponseEntity<String> eliminarUsuario(@PathVariable String correo) {
@@ -138,6 +114,4 @@ public class UsuarioController {
             return ResponseEntity.badRequest().body(ex.getMessage());
         }
     }
-
-
 }

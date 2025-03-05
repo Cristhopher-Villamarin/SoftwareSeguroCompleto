@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import { jwtDecode } from "jwt-decode";
 import "../../../styles/prestamos.css";
 
 const Prestamos = () => {
@@ -7,8 +8,21 @@ const Prestamos = () => {
   const [error, setError] = useState("");
   const navigate = useNavigate();
 
+  // Obtener y decodificar el token
   const token = localStorage.getItem("token");
-  const usuarioEmail = localStorage.getItem("correo"); // 📌 Obtener el correo del usuario
+  let usuarioEmail = "";
+
+  if (token) {
+    try {
+      const decodedToken = jwtDecode(token);
+      usuarioEmail = decodedToken.sub; // 📌 Extrae el correo desde el token
+    } catch (error) {
+      console.error("Error al decodificar el token:", error);
+      navigate("/auth/login");
+    }
+  } else {
+    navigate("/auth/login");
+  }
 
   useEffect(() => {
     if (!token || !usuarioEmail) {

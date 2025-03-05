@@ -8,6 +8,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
 import java.util.Optional;
 
 @Service
@@ -15,7 +16,7 @@ public class UsuarioService {
 
     private final UsuarioRepository usuarioRepository;
     private final PasswordEncoder passwordEncoder;
-    private final JwtUtil jwtUtil; //  Inyectamos la utilidad de JWT
+    private final JwtUtil jwtUtil;
 
     @Autowired
     public UsuarioService(UsuarioRepository usuarioRepository, PasswordEncoder passwordEncoder, JwtUtil jwtUtil) {
@@ -24,23 +25,18 @@ public class UsuarioService {
         this.jwtUtil = jwtUtil;
     }
 
-    /**
-     * Registrar un nuevo usuario con contraseña cifrada.
-     */
     public Usuario registrarUsuario(Usuario usuario) {
-        usuario.setContrasenaHash(passwordEncoder.encode(usuario.getContrasenaHash())); // Cifrar contraseña
+        usuario.setContrasenaHash(passwordEncoder.encode(usuario.getContrasenaHash()));
         usuario.setIntentosFallidos(0);
         usuario.setCuentaBloqueada(false);
-        usuario.setRol(Rol.USUARIO); //  Asignar siempre el rol USUARIO
-        usuario.setIngresos(null); //  Dejar estos valores en null para pedirlos después
+        usuario.setRol(Rol.USUARIO);
+        usuario.setIngresos(null);
         usuario.setHistorialCred(null);
+        usuario.setFechaDesbloqueo(null);
 
         return usuarioRepository.save(usuario);
     }
 
-    /**
-     * Registrar un nuevo administrador (solo permitido para usuarios con rol ADMIN).
-     */
     public Usuario registrarAdmin(Usuario usuario) {
         if (usuarioRepository.findByCorreo(usuario.getCorreo()).isPresent()) {
             throw new RuntimeException("El correo ya está registrado.");
@@ -49,23 +45,18 @@ public class UsuarioService {
         usuario.setContrasenaHash(passwordEncoder.encode(usuario.getContrasenaHash()));
         usuario.setIntentosFallidos(0);
         usuario.setCuentaBloqueada(false);
-        usuario.setRol(Rol.ADMIN); // 🔥 Asignar rol ADMIN
+        usuario.setRol(Rol.ADMIN);
         usuario.setIngresos(null);
         usuario.setHistorialCred(null);
+        usuario.setFechaDesbloqueo(null);
 
         return usuarioRepository.save(usuario);
     }
 
-    /**
-     * Obtener un usuario por su correo electrónico.
-     */
     public Optional<Usuario> obtenerUsuarioPorCorreo(String correo) {
         return usuarioRepository.findByCorreo(correo);
     }
 
-    /**
-     * Incrementar intentos fallidos de inicio de sesión y bloquear la cuenta si es necesario.
-     */
     public void incrementarIntentosFallidos(String correo) {
         Usuario usuario = usuarioRepository.findByCorreo(correo)
                 .orElseThrow(() -> new RuntimeException("Usuario no encontrado con correo: " + correo));
@@ -75,16 +66,15 @@ public class UsuarioService {
 
             if (usuario.getIntentosFallidos() >= 3) {
                 usuario.setCuentaBloqueada(true);
-                throw new RuntimeException("Cuenta bloqueada por múltiples intentos fallidos.");
+                usuario.setFechaDesbloqueo(LocalDateTime.now().plusMinutes(5)); // Bloqueo por 5 minutos
+                usuarioRepository.save(usuario); // Guardamos antes de lanzar la excepción
+                throw new RuntimeException("Cuenta bloqueada por múltiples intentos fallidos. Intente de nuevo en 5 minutos.");
             }
 
             usuarioRepository.save(usuario);
         }
     }
 
-    /**
-     * Actualizar ingresos e historial crediticio de un usuario identificado por su correo.
-     */
     public Usuario actualizarDatosFinancieros(String correo, Double ingresos, Integer historialCred) {
         Usuario usuario = usuarioRepository.findByCorreo(correo)
                 .orElseThrow(() -> new RuntimeException("Usuario no encontrado con correo: " + correo));
@@ -95,28 +85,31 @@ public class UsuarioService {
         return usuarioRepository.save(usuario);
     }
 
-
-    /**
-     * Desbloquear una cuenta de usuario restableciendo los intentos fallidos.
-     */
     public void desbloquearCuenta(String correo) {
         Usuario usuario = usuarioRepository.findByCorreo(correo)
                 .orElseThrow(() -> new RuntimeException("Usuario no encontrado con correo: " + correo));
 
         usuario.setIntentosFallidos(0);
         usuario.setCuentaBloqueada(false);
+        usuario.setFechaDesbloqueo(null);
         usuarioRepository.save(usuario);
     }
 
-    /**
-     * Autenticar un usuario y generar un token JWT.
-     */
     public String autenticarUsuario(String correo, String contrasena) {
         Usuario usuario = usuarioRepository.findByCorreo(correo)
                 .orElseThrow(() -> new RuntimeException("Usuario no encontrado con correo: " + correo));
 
+        // Verificar si la cuenta está bloqueada y si el tiempo de desbloqueo ha pasado
         if (usuario.getCuentaBloqueada()) {
-            throw new RuntimeException("Cuenta bloqueada. Contacte al administrador.");
+            if (usuario.getFechaDesbloqueo() != null && usuario.getFechaDesbloqueo().isBefore(LocalDateTime.now())) {
+                // Desbloquear automáticamente si ha pasado el tiempo
+                usuario.setCuentaBloqueada(false);
+                usuario.setIntentosFallidos(0);
+                usuario.setFechaDesbloqueo(null);
+                usuarioRepository.save(usuario);
+            } else {
+                throw new RuntimeException("Cuenta bloqueada. Intente nuevamente después de " + usuario.getFechaDesbloqueo());
+            }
         }
 
         if (!passwordEncoder.matches(contrasena, usuario.getContrasenaHash())) {
@@ -124,22 +117,25 @@ public class UsuarioService {
             throw new RuntimeException("Credenciales incorrectas.");
         }
 
-        // Reiniciar intentos fallidos después de un inicio de sesión exitoso
+        // Restablecer intentos fallidos si la autenticación es correcta
         usuario.setIntentosFallidos(0);
         usuarioRepository.save(usuario);
 
-        // 🔥 Generar y devolver token JWT
-        return jwtUtil.generarToken(usuario.getCorreo());
+        return jwtUtil.generarToken(
+                usuario.getIdUsuario(),
+                usuario.getCorreo(),
+                usuario.getNombre(),
+                usuario.getApellido(),
+                usuario.getRol().name(),
+                usuario.getCedula()
+        );
     }
+
     public void eliminarUsuario(String correo) {
         Optional<Usuario> usuario = usuarioRepository.findByCorreo(correo);
-
         if (usuario.isEmpty()) {
             throw new RuntimeException("Usuario no encontrado.");
         }
-
         usuarioRepository.delete(usuario.get());
     }
-
-
 }

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import "bootstrap/dist/css/bootstrap.min.css";
 import { FaArrowLeft } from "react-icons/fa";
@@ -12,6 +12,11 @@ const Login = () => {
   const [error, setError] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const navigate = useNavigate();
+
+  // 📌 Limpiar el localStorage cuando el usuario entra al login
+  useEffect(() => {
+    localStorage.removeItem("token"); // Eliminar el token
+  }, []);
 
   const sanitizeInput = (input) => DOMPurify.sanitize(input.trim());
 
@@ -46,18 +51,16 @@ const Login = () => {
       const data = await response.json();
       const token = data.token;
 
-      // 📌 Decodificar el token para obtener el correo (sub)
-      const decodedToken = jwtDecode(token);
-      const correoDecodificado = decodedToken.sub;
-
-      // 📌 Almacenar en localStorage
+      // 📌 Almacenar solo el token en localStorage
       localStorage.setItem("token", token);
-      localStorage.setItem("rol", data.rol);
-      localStorage.setItem("correo", correoDecodificado);
-      
 
-      // Redirigir según el rol del usuario
-      navigate(data.rol === "USUARIO" ? "/user/home" : "/admin/dashboard");
+      // 📌 Decodificar el token para obtener el rol y redirigir
+      const decodedToken = jwtDecode(token);
+      const rol = decodedToken.rol;
+
+      // 📌 Redirigir según el rol del usuario
+      navigate(rol === "USUARIO" ? "/user/home" : "/admin/dashboard");
+
     } catch (err) {
       setError(err.message || "Error en el servidor.");
     } finally {
