@@ -6,7 +6,10 @@ import com.prestamos.gestion_prestamos.model.Usuario;
 import com.prestamos.gestion_prestamos.repository.CuotaRepository;
 import com.prestamos.gestion_prestamos.repository.PrestamoRepository;
 import com.prestamos.gestion_prestamos.repository.UsuarioRepository;
+import com.prestamos.gestion_prestamos.security.ActionLogger; // Importar ActionLogger
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
@@ -23,11 +26,19 @@ public class PrestamoService {
     private PrestamoRepository prestamoRepository;
 
     @Autowired
-    private UsuarioRepository usuarioRepository; // Necesario para obtener el usuario por correo
-
+    private UsuarioRepository usuarioRepository;
 
     @Autowired
     private CuotaRepository cuotaRepository;
+
+    // Método auxiliar para obtener el usuario autenticado del contexto de seguridad
+    private String getUsuarioAutenticado() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication != null && authentication.isAuthenticated() && !"anonymousUser".equals(authentication.getPrincipal())) {
+            return authentication.getName(); // Devuelve el "sub" del JWT (correo)
+        }
+        return null;
+    }
 
     private double calcularMontoTotalFrances(double montoSolicitado, double tasaInteresAnual, int plazoMeses) {
         double tasaMensual = tasaInteresAnual / 12 / 100;
@@ -51,90 +62,115 @@ public class PrestamoService {
         return montoTotal;
     }
 
-    /**
-     * Crear un nuevo préstamo solo si el usuario no tiene préstamos activos.
-     */
     public Prestamo crearPrestamo(Prestamo prestamo) {
-        long prestamosActivos = prestamoRepository.countByUsuario_IdUsuarioAndEstadoPrestamo(prestamo.getUsuario().getIdUsuario(), "ACTIVO");
+        String usuarioAutenticado = getUsuarioAutenticado();
+        String usuarioCorreo = prestamo.getUsuario().getCorreo();
 
+        long prestamosActivos = prestamoRepository.countByUsuario_IdUsuarioAndEstadoPrestamo(prestamo.getUsuario().getIdUsuario(), "ACTIVO");
         if (prestamosActivos > 0) {
+            ActionLogger.logAction(usuarioAutenticado != null ? usuarioAutenticado : usuarioCorreo,
+                    "Intentó crear un préstamo pero ya tiene préstamos activos");
             throw new RuntimeException("El usuario ya tiene préstamos activos y no puede solicitar otro.");
         }
 
-        // 🔹 Calcular el monto total según el tipo de pago
         double montoTotal;
         if ("FRANCES".equalsIgnoreCase(prestamo.getTipoPago())) {
             montoTotal = calcularMontoTotalFrances(prestamo.getMontoSolicitado(), prestamo.getTasaInteres(), prestamo.getPlazoMeses());
         } else if ("ALEMAN".equalsIgnoreCase(prestamo.getTipoPago())) {
             montoTotal = calcularMontoTotalAleman(prestamo.getMontoSolicitado(), prestamo.getTasaInteres(), prestamo.getPlazoMeses());
         } else {
+            ActionLogger.logAction(usuarioAutenticado != null ? usuarioAutenticado : usuarioCorreo,
+                    "Intentó crear un préstamo con tipo de pago no válido: " + prestamo.getTipoPago());
             throw new RuntimeException("Tipo de pago no válido: " + prestamo.getTipoPago());
         }
 
-        // Asignar el monto total calculado
         prestamo.setMontoTotal(montoTotal);
-        prestamo.setMontoPendiente(montoTotal); // Inicialmente el monto pendiente es el total
+        prestamo.setMontoPendiente(montoTotal);
 
-        return prestamoRepository.save(prestamo);
+        Prestamo savedPrestamo = prestamoRepository.save(prestamo);
+        ActionLogger.logAction(usuarioAutenticado != null ? usuarioAutenticado : usuarioCorreo,
+                "Creó un nuevo préstamo con ID: " + savedPrestamo.getIdPrestamo());
+        return savedPrestamo;
     }
 
-
-    /**
-     * Obtener todos los préstamos asociados a un usuario por su cédula.
-     */
     public List<Prestamo> obtenerPrestamosPorCedula(String cedula) {
-        return prestamoRepository.findByUsuario_Cedula(cedula);
+        String usuarioAutenticado = getUsuarioAutenticado();
+        List<Prestamo> prestamos = prestamoRepository.findByUsuario_Cedula(cedula);
+        ActionLogger.logAction(usuarioAutenticado != null ? usuarioAutenticado : "Sistema",
+                "Consultó los préstamos del usuario con cédula: " + cedula);
+        return prestamos;
     }
 
-    /**
-     * Obtener los préstamos de un usuario utilizando su correo.
-     */
     public List<Prestamo> obtenerPrestamosPorCorreo(String correo) {
+        String usuarioAutenticado = getUsuarioAutenticado();
         Usuario usuario = usuarioRepository.findByCorreo(correo)
-                .orElseThrow(() -> new RuntimeException("Usuario no encontrado con correo: " + correo));
+                .orElseThrow(() -> {
+                    ActionLogger.logAction(usuarioAutenticado != null ? usuarioAutenticado : "Sistema",
+                            "Intentó consultar préstamos de un usuario no encontrado con correo: " + correo);
+                    return new RuntimeException("Usuario no encontrado con correo: " + correo);
+                });
 
-        return prestamoRepository.findByUsuario_Cedula(usuario.getCedula());
+        List<Prestamo> prestamos = prestamoRepository.findByUsuario_Cedula(usuario.getCedula());
+        ActionLogger.logAction(usuarioAutenticado != null ? usuarioAutenticado : "Sistema",
+                "Consultó los préstamos del usuario con correo: " + correo);
+        return prestamos;
     }
 
-    /**
-     * Obtener un préstamo por su ID.
-     */
     public Prestamo obtenerPrestamoPorId(Long idPrestamo) {
-        return prestamoRepository.findById(idPrestamo)
-                .orElseThrow(() -> new RuntimeException("Préstamo no encontrado con ID: " + idPrestamo));
-    }
-
-    /**
-     * Obtener todos los préstamos registrados en el sistema.
-     */
-    public List<Prestamo> obtenerTodosLosPrestamos() {
-        return prestamoRepository.findAll();
-    }
-
-    /**
-     * Cambiar el estado de un préstamo.
-     */
-    public Prestamo cambiarEstadoPrestamo(Long idPrestamo, String nuevoEstado) {
+        String usuarioAutenticado = getUsuarioAutenticado();
         Prestamo prestamo = prestamoRepository.findById(idPrestamo)
-                .orElseThrow(() -> new RuntimeException("Préstamo no encontrado con ID: " + idPrestamo));
+                .orElseThrow(() -> {
+                    ActionLogger.logAction(usuarioAutenticado != null ? usuarioAutenticado : "Sistema",
+                            "Intentó obtener un préstamo no encontrado con ID: " + idPrestamo);
+                    return new RuntimeException("Préstamo no encontrado con ID: " + idPrestamo);
+                });
+        ActionLogger.logAction(usuarioAutenticado != null ? usuarioAutenticado : "Sistema",
+                "Consultó el préstamo con ID: " + idPrestamo);
+        return prestamo;
+    }
 
-        // Validar estados permitidos
+    public List<Prestamo> obtenerTodosLosPrestamos() {
+        String usuarioAutenticado = getUsuarioAutenticado();
+        List<Prestamo> prestamos = prestamoRepository.findAll();
+        ActionLogger.logAction(usuarioAutenticado != null ? usuarioAutenticado : "Sistema",
+                "Consultó todos los préstamos registrados");
+        return prestamos;
+    }
+
+    public Prestamo cambiarEstadoPrestamo(Long idPrestamo, String nuevoEstado) {
+        String usuarioAutenticado = getUsuarioAutenticado();
+        Prestamo prestamo = prestamoRepository.findById(idPrestamo)
+                .orElseThrow(() -> {
+                    ActionLogger.logAction(usuarioAutenticado != null ? usuarioAutenticado : "Sistema",
+                            "Intentó cambiar estado de un préstamo no encontrado con ID: " + idPrestamo);
+                    return new RuntimeException("Préstamo no encontrado con ID: " + idPrestamo);
+                });
+
         if (!nuevoEstado.equals("ACTIVO") && !nuevoEstado.equals("CANCELADO") && !nuevoEstado.equals("PENDIENTE")) {
+            ActionLogger.logAction(usuarioAutenticado != null ? usuarioAutenticado : "Sistema",
+                    "Intentó cambiar estado de préstamo con ID: " + idPrestamo + " a un estado no válido: " + nuevoEstado);
             throw new IllegalArgumentException("Estado no válido. Los estados permitidos son 'ACTIVO', 'CANCELADO' o 'PENDIENTE'.");
         }
 
         prestamo.setEstadoPrestamo(nuevoEstado);
-        return prestamoRepository.save(prestamo);
+        Prestamo updatedPrestamo = prestamoRepository.save(prestamo);
+        ActionLogger.logAction(usuarioAutenticado != null ? usuarioAutenticado : "Sistema",
+                "Cambió el estado del préstamo con ID: " + idPrestamo + " a: " + nuevoEstado);
+        return updatedPrestamo;
     }
 
-    /**
-     * Aprobar un préstamo (cambiar estado a ACTIVO y generar cuotas).
-     */
     public Prestamo aprobarPrestamo(Long idPrestamo) {
+        String usuarioAutenticado = getUsuarioAutenticado();
         Prestamo prestamo = prestamoRepository.findById(idPrestamo)
-                .orElseThrow(() -> new RuntimeException("Préstamo no encontrado con ID: " + idPrestamo));
+                .orElseThrow(() -> {
+                    ActionLogger.logAction(usuarioAutenticado != null ? usuarioAutenticado : "Sistema",
+                            "Intentó aprobar un préstamo no encontrado con ID: " + idPrestamo);
+                    return new RuntimeException("Préstamo no encontrado con ID: " + idPrestamo);
+                });
 
         if (!"PENDIENTE".equals(prestamo.getEstadoPrestamo())) {
+            ActionLogger.logAction(usuarioAutenticado != null ? usuarioAutenticado : "Sistema",
+                    "Intentó aprobar un préstamo con ID: " + idPrestamo + " que no está en estado PENDIENTE");
             throw new RuntimeException("Solo los préstamos en estado PENDIENTE pueden ser aprobados.");
         }
 
@@ -142,18 +178,14 @@ public class PrestamoService {
         prestamo.setFechaAprobacion(LocalDate.now());
         prestamo = prestamoRepository.save(prestamo);
 
-        // Generar la tabla de amortización y guardar las cuotas en la BD
         generarTablaAmortizacion(prestamo);
-
+        ActionLogger.logAction(usuarioAutenticado != null ? usuarioAutenticado : "Sistema",
+                "Aprobó el préstamo con ID: " + idPrestamo + " y generó tabla de amortización");
         return prestamo;
     }
 
-    /**
-     * Genera la tabla de amortización basada en el tipo de pago.
-     */
     private void generarTablaAmortizacion(Prestamo prestamo) {
         List<Cuota> cuotas;
-
         if ("FRANCES".equals(prestamo.getTipoPago())) {
             cuotas = calcularCuotasFrances(prestamo);
         } else if ("ALEMAN".equals(prestamo.getTipoPago())) {
@@ -161,24 +193,17 @@ public class PrestamoService {
         } else {
             throw new RuntimeException("Tipo de pago no válido: " + prestamo.getTipoPago());
         }
-
         cuotaRepository.saveAll(cuotas);
     }
 
-    /**
-     * Método para calcular cuotas con el sistema de amortización francés.
-     */
     private List<Cuota> calcularCuotasFrances(Prestamo prestamo) {
         List<Cuota> cuotas = new ArrayList<>();
         double tasaMensual = prestamo.getTasaInteres() / 12 / 100;
         int plazo = prestamo.getPlazoMeses();
         double monto = prestamo.getMontoSolicitado();
 
-        // Fórmula de la cuota fija en el sistema francés
         double cuotaFija = (monto * tasaMensual) / (1 - Math.pow(1 + tasaMensual, -plazo));
-
         LocalDate fechaVencimiento = prestamo.getFechaAprobacion().plusMonths(1);
-
         double saldoPendiente = monto;
 
         for (int i = 1; i <= plazo; i++) {
@@ -204,9 +229,6 @@ public class PrestamoService {
         return cuotas;
     }
 
-    /**
-     * Método para calcular cuotas con el sistema de amortización alemán.
-     */
     private List<Cuota> calcularCuotasAleman(Prestamo prestamo) {
         List<Cuota> cuotas = new ArrayList<>();
         double tasaMensual = prestamo.getTasaInteres() / 12 / 100;
@@ -240,20 +262,19 @@ public class PrestamoService {
         return cuotas;
     }
 
-    /**
-     * Obtener préstamos por estado.
-     */
     public List<Prestamo> obtenerPrestamosPorEstado(String estadoPrestamo) {
-        return prestamoRepository.findByEstadoPrestamo(estadoPrestamo);
+        String usuarioAutenticado = getUsuarioAutenticado();
+        List<Prestamo> prestamos = prestamoRepository.findByEstadoPrestamo(estadoPrestamo);
+        ActionLogger.logAction(usuarioAutenticado != null ? usuarioAutenticado : "Sistema",
+                "Consultó préstamos con estado: " + estadoPrestamo);
+        return prestamos;
     }
 
-    /**
-     * Obtiene los usuarios que han realizado préstamos con su información básica.
-     */
     public List<Map<String, String>> obtenerUsuariosConPrestamos() {
+        String usuarioAutenticado = getUsuarioAutenticado();
         List<Usuario> usuarios = prestamoRepository.obtenerUsuariosConPrestamos();
 
-        return usuarios.stream().map(usuario -> {
+        List<Map<String, String>> resultado = usuarios.stream().map(usuario -> {
             Map<String, String> datos = new HashMap<>();
             datos.put("nombreCompleto", usuario.getNombre() + " " + usuario.getApellido());
             datos.put("cedula", usuario.getCedula());
@@ -262,6 +283,9 @@ public class PrestamoService {
             datos.put("cuentaBloqueada", usuario.getCuentaBloqueada() ? "Sí" : "No");
             return datos;
         }).collect(Collectors.toList());
-    }
 
+        ActionLogger.logAction(usuarioAutenticado != null ? usuarioAutenticado : "Sistema",
+                "Consultó la lista de usuarios con préstamos");
+        return resultado;
+    }
 }

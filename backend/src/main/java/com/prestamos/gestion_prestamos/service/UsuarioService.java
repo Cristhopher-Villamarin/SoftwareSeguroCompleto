@@ -3,10 +3,13 @@ package com.prestamos.gestion_prestamos.service;
 import com.prestamos.gestion_prestamos.model.Rol;
 import com.prestamos.gestion_prestamos.model.Usuario;
 import com.prestamos.gestion_prestamos.repository.UsuarioRepository;
+import com.prestamos.gestion_prestamos.security.ActionLogger; // Importar ActionLogger
 import com.prestamos.gestion_prestamos.security.JwtUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -20,7 +23,7 @@ public class UsuarioService {
     private final UsuarioRepository usuarioRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtUtil jwtUtil;
-    private JavaMailSender mailSender;
+    private final JavaMailSender mailSender;
 
     @Autowired
     public UsuarioService(UsuarioRepository usuarioRepository, PasswordEncoder passwordEncoder, JwtUtil jwtUtil, JavaMailSender mailSender) {
@@ -28,6 +31,15 @@ public class UsuarioService {
         this.passwordEncoder = passwordEncoder;
         this.jwtUtil = jwtUtil;
         this.mailSender = mailSender;
+    }
+
+    // Método auxiliar para obtener el usuario autenticado del token JWT
+    private String getUsuarioAutenticado() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication != null && authentication.isAuthenticated() && !"anonymousUser".equals(authentication.getPrincipal())) {
+            return authentication.getName(); // Devuelve el "sub" del JWT (correo)
+        }
+        return null; // Si no hay usuario autenticado
     }
 
     public Usuario registrarUsuario(Usuario usuario) {
@@ -39,7 +51,9 @@ public class UsuarioService {
         usuario.setHistorialCred(null);
         usuario.setFechaDesbloqueo(null);
 
-        return usuarioRepository.save(usuario);
+        Usuario savedUsuario = usuarioRepository.save(usuario);
+        ActionLogger.logAction(usuario.getCorreo(), "Registró una nueva cuenta como USUARIO");
+        return savedUsuario;
     }
 
     public void solicitarRecuperacion(String correo) {
@@ -54,12 +68,11 @@ public class UsuarioService {
             usuarioRepository.save(usuario);
 
             enviarCorreoRecuperacion(usuario.getCorreo(), token);
+            ActionLogger.logAction(correo, "Solicitó recuperación de contraseña");
+        } else {
+            ActionLogger.logAction(correo, "Intentó solicitar recuperación de contraseña (correo no registrado)");
         }
-
-        // Siempre termina sin excepción por seguridad.
     }
-
-
 
     private void enviarCorreoRecuperacion(String correo, String token) {
         SimpleMailMessage mensaje = new SimpleMailMessage();
@@ -68,8 +81,7 @@ public class UsuarioService {
         mensaje.setSubject("Recuperación de contraseña");
 
         String enlace = "http://localhost:3000/auth/restablecer";
-        mensaje.setText("Hola, para restablecer tu contraseña, copia el siguiente código de seguridad: " + token+" y haz clic en el siguiente enlace: " + enlace);
-
+        mensaje.setText("Hola, para restablecer tu contraseña, copia el siguiente código de seguridad: " + token + " y haz clic en el siguiente enlace: " + enlace);
 
         mailSender.send(mensaje);
     }
@@ -79,6 +91,7 @@ public class UsuarioService {
                 .orElseThrow(() -> new RuntimeException("El token es inválido o ya ha expirado."));
 
         if (usuario.getExpiracionTokenRecuperacion().isBefore(LocalDateTime.now())) {
+            ActionLogger.logAction(usuario.getCorreo(), "Intentó restablecer contraseña con token expirado: " + token);
             throw new RuntimeException("El token ha expirado. Solicita uno nuevo.");
         }
 
@@ -86,10 +99,12 @@ public class UsuarioService {
         usuario.setTokenRecuperacion(null);
         usuario.setExpiracionTokenRecuperacion(null);
         usuarioRepository.save(usuario);
+        ActionLogger.logAction(usuario.getCorreo(), "Restableció su contraseña con token: " + token);
     }
 
     public Usuario registrarAdmin(Usuario usuario) {
         if (usuarioRepository.findByCorreo(usuario.getCorreo()).isPresent()) {
+            ActionLogger.logAction(usuario.getCorreo(), "Intentó registrar un administrador con correo ya existente");
             throw new RuntimeException("El correo ya está registrado.");
         }
 
@@ -101,10 +116,14 @@ public class UsuarioService {
         usuario.setHistorialCred(null);
         usuario.setFechaDesbloqueo(null);
 
-        return usuarioRepository.save(usuario);
+        Usuario savedUsuario = usuarioRepository.save(usuario);
+        ActionLogger.logAction(usuario.getCorreo(), "Registró una nueva cuenta como ADMIN");
+        return savedUsuario;
     }
 
     public Optional<Usuario> obtenerUsuarioPorCorreo(String correo) {
+        String usuarioAutenticado = getUsuarioAutenticado();
+        ActionLogger.logAction(usuarioAutenticado != null ? usuarioAutenticado : "Sistema", "Consultó datos del usuario con correo: " + correo);
         return usuarioRepository.findByCorreo(correo);
     }
 
@@ -117,12 +136,14 @@ public class UsuarioService {
 
             if (usuario.getIntentosFallidos() >= 3) {
                 usuario.setCuentaBloqueada(true);
-                usuario.setFechaDesbloqueo(LocalDateTime.now().plusMinutes(5)); // Bloqueo por 5 minutos
-                usuarioRepository.save(usuario); // Guardamos antes de lanzar la excepción
+                usuario.setFechaDesbloqueo(LocalDateTime.now().plusMinutes(5));
+                usuarioRepository.save(usuario);
+                ActionLogger.logAction(correo, "Cuenta bloqueada por 3 intentos fallidos");
                 throw new RuntimeException("Cuenta bloqueada por múltiples intentos fallidos. Intente de nuevo en 5 minutos.");
             }
 
             usuarioRepository.save(usuario);
+            ActionLogger.logAction(correo, "Incrementó intentos fallidos a: " + usuario.getIntentosFallidos());
         }
     }
 
@@ -133,7 +154,10 @@ public class UsuarioService {
         usuario.setIngresos(ingresos);
         usuario.setHistorialCred(historialCred);
 
-        return usuarioRepository.save(usuario);
+        Usuario updatedUsuario = usuarioRepository.save(usuario);
+        String usuarioAutenticado = getUsuarioAutenticado();
+        ActionLogger.logAction(usuarioAutenticado != null ? usuarioAutenticado : correo, "Actualizó datos financieros para: " + correo);
+        return updatedUsuario;
     }
 
     public void desbloquearCuenta(String correo) {
@@ -144,35 +168,37 @@ public class UsuarioService {
         usuario.setCuentaBloqueada(false);
         usuario.setFechaDesbloqueo(null);
         usuarioRepository.save(usuario);
+
+        String usuarioAutenticado = getUsuarioAutenticado();
+        ActionLogger.logAction(usuarioAutenticado != null ? usuarioAutenticado : "Sistema", "Desbloqueó la cuenta de: " + correo);
     }
 
     public String autenticarUsuario(String correo, String contrasena) {
         Usuario usuario = usuarioRepository.findByCorreo(correo)
                 .orElseThrow(() -> new RuntimeException("Usuario no encontrado con correo: " + correo));
 
-        // Verificar si la cuenta está bloqueada y si el tiempo de desbloqueo ha pasado
         if (usuario.getCuentaBloqueada()) {
             if (usuario.getFechaDesbloqueo() != null && usuario.getFechaDesbloqueo().isBefore(LocalDateTime.now())) {
-                // Desbloquear automáticamente si ha pasado el tiempo
                 usuario.setCuentaBloqueada(false);
                 usuario.setIntentosFallidos(0);
                 usuario.setFechaDesbloqueo(null);
                 usuarioRepository.save(usuario);
+                ActionLogger.logAction(correo, "Cuenta desbloqueada automáticamente tras expirar el tiempo de bloqueo");
             } else {
+                ActionLogger.logAction(correo, "Intento de login fallido - Cuenta bloqueada hasta: " + usuario.getFechaDesbloqueo());
                 throw new RuntimeException("Cuenta bloqueada. Intente nuevamente después de " + usuario.getFechaDesbloqueo());
             }
         }
 
         if (!passwordEncoder.matches(contrasena, usuario.getContrasenaHash())) {
             incrementarIntentosFallidos(correo);
+            ActionLogger.logAction(correo, "Intento de login fallido - Credenciales incorrectas");
             throw new RuntimeException("Credenciales incorrectas.");
         }
 
-        // Restablecer intentos fallidos si la autenticación es correcta
         usuario.setIntentosFallidos(0);
         usuarioRepository.save(usuario);
-
-        return jwtUtil.generarToken(
+        String token = jwtUtil.generarToken(
                 usuario.getIdUsuario(),
                 usuario.getCorreo(),
                 usuario.getNombre(),
@@ -180,13 +206,19 @@ public class UsuarioService {
                 usuario.getRol().name(),
                 usuario.getCedula()
         );
+        ActionLogger.logAction(correo, "Inició sesión exitosamente");
+        return token;
     }
 
     public void eliminarUsuario(String correo) {
         Optional<Usuario> usuario = usuarioRepository.findByCorreo(correo);
         if (usuario.isEmpty()) {
+            String usuarioAutenticado = getUsuarioAutenticado();
+            ActionLogger.logAction(usuarioAutenticado != null ? usuarioAutenticado : "Sistema", "Intentó eliminar usuario no existente con correo: " + correo);
             throw new RuntimeException("Usuario no encontrado.");
         }
         usuarioRepository.delete(usuario.get());
+        String usuarioAutenticado = getUsuarioAutenticado();
+        ActionLogger.logAction(usuarioAutenticado != null ? usuarioAutenticado : "Sistema", "Eliminó al usuario con correo: " + correo);
     }
 }

@@ -1,0 +1,35 @@
+[2025-03-06 00:00:42] Usuario: sebastatoo9@gmail.com - Acción: Registró una nueva cuenta como USUARIO
+[2025-03-06 00:01:29] Usuario: sebastatoo9@gmail.com - Acción: Inició sesión exitosamente
+[2025-03-06 00:01:30] Usuario: sebastatoo9@gmail.com - Acción: Consultó los préstamos del usuario con correo: sebastatoo9@gmail.com
+[2025-03-06 00:01:30] Usuario: sebastatoo9@gmail.com - Acción: Consultó los préstamos del usuario con correo: sebastatoo9@gmail.com
+[2025-03-06 00:01:32] Usuario: sebastatoo9@gmail.com - Acción: Consultó los préstamos del usuario con correo: sebastatoo9@gmail.com
+[2025-03-06 00:01:42] Usuario: sebastatoo9@gmail.com - Acción: Actualizó datos financieros para: sebastatoo9@gmail.com
+[2025-03-06 00:01:55] Usuario: sebastatoo9@gmail.com - Acción: Creó un nuevo préstamo con ID: 1
+[2025-03-06 00:02:03] Usuario: sebastatoo9@gmail.com - Acción: Consultó los préstamos del usuario con correo: sebastatoo9@gmail.com
+[2025-03-06 00:02:03] Usuario: sebastatoo9@gmail.com - Acción: Consultó los préstamos del usuario con correo: sebastatoo9@gmail.com
+[2025-03-06 00:02:03] Usuario: sebastatoo9@gmail.com - Acción: Consultó los préstamos del usuario con correo: sebastatoo9@gmail.com
+[2025-03-06 00:02:03] Usuario: sebastatoo9@gmail.com - Acción: Consultó los préstamos del usuario con correo: sebastatoo9@gmail.com
+[2025-03-06 00:02:16] Usuario: admin2@example.com - Acción: Registró una nueva cuenta como ADMIN
+[2025-03-06 00:03:23] Usuario: admin2@example.com - Acción: Inició sesión exitosamente
+[2025-03-06 00:03:25] Usuario: admin2@example.com - Acción: Consultó la lista de usuarios con préstamos
+[2025-03-06 00:03:25] Usuario: admin2@example.com - Acción: Consultó la lista de usuarios con préstamos
+[2025-03-06 00:03:28] Usuario: admin2@example.com - Acción: Consultó todos los préstamos registrados
+[2025-03-06 00:03:28] Usuario: admin2@example.com - Acción: Consultó todos los préstamos registrados
+[2025-03-06 00:03:33] Usuario: admin2@example.com - Acción: Aprobó el préstamo con ID: 1 y generó tabla de amortización
+[2025-03-06 00:03:49] Usuario: sebastatoo9@gmail.com - Acción: Inició sesión exitosamente
+[2025-03-06 00:03:50] Usuario: sebastatoo9@gmail.com - Acción: Consultó los préstamos del usuario con correo: sebastatoo9@gmail.com
+[2025-03-06 00:03:50] Usuario: sebastatoo9@gmail.com - Acción: Consultó los préstamos del usuario con correo: sebastatoo9@gmail.com
+[2025-03-06 00:03:52] Usuario: sebastatoo9@gmail.com - Acción: Consultó los préstamos del usuario con correo: sebastatoo9@gmail.com
+[2025-03-06 00:03:52] Usuario: sebastatoo9@gmail.com - Acción: Consultó los préstamos del usuario con correo: sebastatoo9@gmail.com
+[2025-03-06 00:03:52] Usuario: sebastatoo9@gmail.com - Acción: Consultó las cuotas del préstamo con ID: 1
+[2025-03-06 00:03:52] Usuario: sebastatoo9@gmail.com - Acción: Consultó las cuotas del préstamo con ID: 1
+[2025-03-06 00:04:11] Usuario: sebastatoo9@gmail.com - Acción: Registró el pago de la cuota con ID: 1 del préstamo con ID: 1
+[2025-03-06 00:04:13] Usuario: sebastatoo9@gmail.com - Acción: Consultó los préstamos del usuario con correo: sebastatoo9@gmail.com
+[2025-03-06 00:04:13] Usuario: sebastatoo9@gmail.com - Acción: Consultó los préstamos del usuario con correo: sebastatoo9@gmail.com
+[2025-03-06 00:04:13] Usuario: sebastatoo9@gmail.com - Acción: Consultó las cuotas del préstamo con ID: 1
+[2025-03-06 00:04:14] Usuario: sebastatoo9@gmail.com - Acción: Consultó las cuotas del préstamo con ID: 1
+[2025-03-06 00:04:16] Usuario: sebastatoo9@gmail.com - Acción: Consultó los préstamos del usuario con correo: sebastatoo9@gmail.com
+[2025-03-06 00:04:16] Usuario: sebastatoo9@gmail.com - Acción: Consultó los préstamos del usuario con correo: sebastatoo9@gmail.com
+[2025-03-06 00:04:16] Usuario: sebastatoo9@gmail.com - Acción: Consultó las cuotas del préstamo con ID: 1
+[2025-03-06 00:04:16] Usuario: sebastatoo9@gmail.com - Acción: Consultó las cuotas del préstamo con ID: 1
+[2025-03-06 00:04:28] Usuario: sebastatoo9@gmail.com - Acción: Consultó los préstamos del usuario con correo: sebastatoo9@gmail.com
