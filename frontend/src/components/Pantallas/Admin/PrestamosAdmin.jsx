@@ -61,6 +61,30 @@ const PrestamosAdmin = () => {
     }
   };
 
+  const handleDesaprobarPrestamo = async (idPrestamo) => {
+    try {
+      const response = await fetch(`http://localhost:8080/api/prestamos/${idPrestamo}/desaprobar`, {
+        method: 'PUT',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error('Error al desaprobar el préstamo');
+      }
+
+      const updatedPrestamos = prestamos.map(prestamo => 
+        prestamo.idPrestamo === idPrestamo ? { ...prestamo, estadoPrestamo: 'DESAPROBADO' } : prestamo
+      );
+      setPrestamos(updatedPrestamos);
+      alert('Préstamo desaprobado exitosamente');
+    } catch (err) {
+      alert(err.message);
+    }
+  };
+
   const handleShowModal = (usuario) => {
     setSelectedUser(usuario);
     setShowModal(true);
@@ -89,7 +113,7 @@ const PrestamosAdmin = () => {
             <table className="table table-hover text-center align-middle">
               <thead style={{ backgroundColor: "#107a54", color: "white" }}>
                 <tr>
-                  <th>#</th> {/* Nueva columna para el número de registro */}
+                  <th>#</th>
                   <th>Cliente</th>
                   <th>Monto Total</th>
                   <th>Monto Pendiente</th>
@@ -109,7 +133,7 @@ const PrestamosAdmin = () => {
                 ) : (
                   prestamos.map((prestamo, index) => (
                     <tr key={prestamo.idPrestamo}>
-                      <td>{index + 1}</td> {/* Mostrar el número de registro */}
+                      <td>{index + 1}</td>
                       <td>{`${prestamo.usuario.nombre} ${prestamo.usuario.apellido}`}</td>
                       <td>${prestamo.montoTotal.toLocaleString('es-ES', { minimumFractionDigits: 2 })}</td>
                       <td>${prestamo.montoPendiente.toLocaleString('es-ES', { minimumFractionDigits: 2 })}</td>
@@ -120,6 +144,7 @@ const PrestamosAdmin = () => {
                           className={`badge ${
                             prestamo.estadoPrestamo === 'PENDIENTE' ? 'bg-warning' :
                             prestamo.estadoPrestamo === 'APROBADO' ? 'bg-success' :
+                            prestamo.estadoPrestamo === 'DESAPROBADO' ? 'bg-danger' :
                             prestamo.estadoPrestamo === 'FINALIZADO' ? 'bg-secondary' : 'bg-info'
                           }`}
                         >
@@ -128,12 +153,20 @@ const PrestamosAdmin = () => {
                       </td>
                       <td>
                         {prestamo.estadoPrestamo === 'PENDIENTE' && (
-                          <button 
-                            className="btn btn-success btn-sm me-2"
-                            onClick={() => handleAprobarPrestamo(prestamo.idPrestamo)}
-                          >
-                            Aprobar
-                          </button>
+                          <>
+                            <button 
+                              className="btn btn-success btn-sm me-2"
+                              onClick={() => handleAprobarPrestamo(prestamo.idPrestamo)}
+                            >
+                              Aprobar
+                            </button>
+                            <button 
+                              className="btn btn-danger btn-sm me-2"
+                              onClick={() => handleDesaprobarPrestamo(prestamo.idPrestamo)}
+                            >
+                              Desaprobar
+                            </button>
+                          </>
                         )}
                         <button 
                           className="btn btn-info btn-sm"
