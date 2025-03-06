@@ -1,5 +1,6 @@
-import React, { useEffect, useState } from "react";
+import React, { useState, useEffect } from "react";
 import { jwtDecode } from "jwt-decode";
+import { Modal, Button } from "react-bootstrap"; // Usar Modal de react-bootstrap
 
 const Amortizacion = () => {
   const [cuotas, setCuotas] = useState([]);
@@ -7,22 +8,21 @@ const Amortizacion = () => {
   const [error, setError] = useState("");
   const [cuotaSeleccionada, setCuotaSeleccionada] = useState(null);
   const [montoPendiente, setMontoPendiente] = useState(null);
+  const [showModal, setShowModal] = useState(false); // Estado para el modal
 
-  // ✅ Decodificar el token para obtener el correo del usuario
   const obtenerCorreoDesdeToken = () => {
     const token = localStorage.getItem("token");
     try {
       if (!token) throw new Error("No hay token disponible.");
       const decodedToken = jwtDecode(token);
       if (!decodedToken.sub) throw new Error("El token no contiene el campo 'sub'.");
-      return decodedToken.sub; // El correo está en "sub"
+      return decodedToken.sub;
     } catch (error) {
       setError("Error al decodificar el token: " + error.message);
       return null;
     }
   };
 
-  // ✅ Obtener las cuotas y el monto pendiente del préstamo activo
   useEffect(() => {
     const fetchData = async () => {
       const correo = obtenerCorreoDesdeToken();
@@ -32,7 +32,6 @@ const Amortizacion = () => {
       }
 
       try {
-        // Obtener los préstamos del usuario
         const prestamoResponse = await fetch(
           `http://localhost:8080/api/prestamos/usuario/correo/${correo}`,
           {
@@ -51,7 +50,6 @@ const Amortizacion = () => {
           throw new Error("No se encontraron préstamos para este usuario.");
         }
 
-        // Buscar el préstamo con estado "ACTIVO"
         const prestamoActivo = prestamosData.find(
           (p) => p.estadoPrestamo === "ACTIVO"
         );
@@ -59,10 +57,8 @@ const Amortizacion = () => {
           throw new Error("No tienes un préstamo activo actualmente.");
         }
 
-        // Establecer el monto pendiente del préstamo activo
         setMontoPendiente(prestamoActivo.montoPendiente);
 
-        // Obtener las cuotas del préstamo activo
         const cuotasResponse = await fetch(
           `http://localhost:8080/api/cuotas/prestamo/${prestamoActivo.idPrestamo}`,
           {
@@ -86,9 +82,8 @@ const Amortizacion = () => {
     };
 
     fetchData();
-  }, []); // No depende de idPrestamoParam, ya que buscamos el activo
+  }, []);
 
-  // ✅ Función para pagar una cuota
   const pagarCuota = async (idCuota) => {
     setError("");
     try {
@@ -105,7 +100,6 @@ const Amortizacion = () => {
         throw new Error(data.error || "Error al pagar la cuota.");
       }
 
-      // Actualizar la tabla marcando la cuota como pagada
       setCuotas((prevCuotas) =>
         prevCuotas.map((cuota) =>
           cuota.idCuota === idCuota
@@ -114,115 +108,151 @@ const Amortizacion = () => {
         )
       );
 
-      // Actualizar el monto pendiente restando el monto de la cuota pagada
       const cuotaPagada = cuotas.find((c) => c.idCuota === idCuota);
       if (cuotaPagada) {
         setMontoPendiente((prev) => Math.max(0, prev - cuotaPagada.montoTotalCuota));
       }
 
       setCuotaSeleccionada(null);
+      setShowModal(false);
     } catch (error) {
       setError(error.message);
     }
   };
 
+  const handleShowModal = (cuota) => {
+    setCuotaSeleccionada(cuota);
+    setShowModal(true);
+  };
+
+  const handleCloseModal = () => {
+    setShowModal(false);
+    setCuotaSeleccionada(null);
+  };
+
+  if (loading) return <div className="text-center mt-5">Cargando cuotas...</div>;
+  if (error) return <div className="text-center mt-5 text-danger">Error: {error}</div>;
+
   return (
-    <div className="container mt-5">
-      <h2 className="text-center">Tabla de Amortización</h2>
+    <div className="container-fluid py-4">
+      <h1 className="text-center mb-4" style={{ color: "#107a54", fontWeight: "bold" }}>
+        Tabla de Amortización
+      </h1>
 
-      {error && <p className="alert alert-danger text-center">{error}</p>}
-
-      {loading ? (
-        <h3 className="text-center">Cargando...</h3>
-      ) : (
-        <>
+      <div className="card shadow">
+        <div className="card-header bg-light">
+          <h3 className="fw-semibold m-0">Cuotas del Préstamo Activo</h3>
+        </div>
+        <div className="card-body">
           {/* Mostrar el saldo pendiente */}
           {montoPendiente !== null && (
             <div className="text-center mb-3">
               <h5>
                 Saldo Pendiente:{" "}
-                <span className="fw-bold text-danger">${montoPendiente.toFixed(2)}</span>
+                <span className="fw-bold text-danger">
+                  ${montoPendiente.toLocaleString("es-ES", { minimumFractionDigits: 2 })}
+                </span>
               </h5>
             </div>
           )}
 
-          <table className="table table-bordered mt-3">
-            <thead className="table-dark">
-              <tr>
-                <th>Cuota</th>
-                <th>Fecha de Pago</th>
-                <th>Capital</th>
-                <th>Interés</th>
-                <th>Valor de la Cuota</th>
-                <th>Estado</th>
-                <th>Acción</th>
-              </tr>
-            </thead>
-            <tbody>
-              {cuotas.length === 0 ? (
+          <div className="table-responsive">
+            <table className="table table-hover text-center align-middle">
+              <thead style={{ backgroundColor: "#107a54", color: "white" }}>
                 <tr>
-                  <td colSpan="7" className="text-center">No hay cuotas registradas</td>
+                  <th>Cuota</th>
+                  <th>Fecha de Pago</th>
+                  <th>Capital</th>
+                  <th>Interés</th>
+                  <th>Valor de la Cuota</th>
+                  <th>Estado</th>
+                  <th>Acción</th>
                 </tr>
-              ) : (
-                cuotas.map((cuota, index) => (
-                  <tr key={index}>
-                    <td>{cuota.numeroCuota}</td>
-                    <td>{cuota.fechaPago || "Pendiente"}</td>
-                    <td>${cuota.capitalCuota.toFixed(2)}</td>
-                    <td>${cuota.interesCuota.toFixed(2)}</td>
-                    <td>${cuota.montoTotalCuota.toFixed(2)}</td>
-                    <td>
-                      <span
-                        className={`badge ${
-                          cuota.estado === "Pagada"
-                            ? "bg-success"
-                            : cuota.estado === "Mora"
-                            ? "bg-danger"
-                            : "bg-warning"
-                        }`}
-                      >
-                        {cuota.estado}
-                      </span>
-                    </td>
-                    <td>
-                      {cuota.estado === "Pendiente" && (
-                        <button
-                          className="btn btn-primary btn-sm"
-                          onClick={() => setCuotaSeleccionada(cuota)}
-                        >
-                          Pagar
-                        </button>
-                      )}
+              </thead>
+              <tbody>
+                {cuotas.length === 0 ? (
+                  <tr>
+                    <td colSpan="7" className="py-3 text-danger fw-bold">
+                      No hay cuotas registradas
                     </td>
                   </tr>
-                ))
-              )}
-            </tbody>
-          </table>
-        </>
-      )}
-
-      {/* Modal de Confirmación */}
-      {cuotaSeleccionada && (
-        <div className="modal-backdrop">
-          <div className="modal-content">
-            <h4>¿Deseas pagar esta cuota?</h4>
-            <p>
-              Cuota #{cuotaSeleccionada.numeroCuota} - Monto: $
-              {cuotaSeleccionada.montoTotalCuota.toFixed(2)}
-            </p>
-            <button
-              className="btn btn-success"
-              onClick={() => pagarCuota(cuotaSeleccionada.idCuota)}
-            >
-              Confirmar
-            </button>
-            <button className="btn btn-secondary" onClick={() => setCuotaSeleccionada(null)}>
-              Cancelar
-            </button>
+                ) : (
+                  cuotas.map((cuota, index) => (
+                    <tr key={index}>
+                      <td>{cuota.numeroCuota}</td>
+                      <td>
+                        {cuota.fechaPago
+                          ? new Date(cuota.fechaPago).toLocaleDateString("es-ES")
+                          : "Pendiente"}
+                      </td>
+                      <td>
+                        ${cuota.capitalCuota.toLocaleString("es-ES", { minimumFractionDigits: 2 })}
+                      </td>
+                      <td>
+                        ${cuota.interesCuota.toLocaleString("es-ES", { minimumFractionDigits: 2 })}
+                      </td>
+                      <td>
+                        ${cuota.montoTotalCuota.toLocaleString("es-ES", { minimumFractionDigits: 2 })}
+                      </td>
+                      <td>
+                        <span
+                          className={`badge ${
+                            cuota.estado === "Pagada"
+                              ? "bg-success"
+                              : cuota.estado === "Mora"
+                              ? "bg-danger"
+                              : "bg-warning"
+                          }`}
+                        >
+                          {cuota.estado}
+                        </span>
+                      </td>
+                      <td>
+                        {cuota.estado === "Pendiente" && (
+                          <button
+                            className="btn btn-primary btn-sm"
+                            onClick={() => handleShowModal(cuota)}
+                          >
+                            Pagar
+                          </button>
+                        )}
+                      </td>
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
           </div>
         </div>
-      )}
+      </div>
+
+      {/* Modal de Confirmación con react-bootstrap */}
+      <Modal show={showModal} onHide={handleCloseModal} centered>
+        <Modal.Header closeButton>
+          <Modal.Title>Confirmar Pago de Cuota</Modal.Title>
+        </Modal.Header>
+        <Modal.Body>
+          {cuotaSeleccionada && (
+            <div>
+              <p>
+                ¿Deseas pagar esta cuota?
+              </p>
+              <p>
+                <strong>Cuota #{cuotaSeleccionada.numeroCuota}</strong> - Monto: $
+                {cuotaSeleccionada.montoTotalCuota.toLocaleString("es-ES", { minimumFractionDigits: 2 })}
+              </p>
+            </div>
+          )}
+        </Modal.Body>
+        <Modal.Footer>
+          <Button variant="secondary" onClick={handleCloseModal}>
+            Cancelar
+          </Button>
+          <Button variant="success" onClick={() => pagarCuota(cuotaSeleccionada.idCuota)}>
+            Confirmar
+          </Button>
+        </Modal.Footer>
+      </Modal>
     </div>
   );
 };

@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { Link } from "react-router-dom";
 
 const Prestatarios = () => {
   const navigate = useNavigate();
@@ -8,6 +7,7 @@ const Prestatarios = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [message, setMessage] = useState("");
+  const [usuarioModal, setUsuarioModal] = useState(null);
 
   useEffect(() => {
     fetchPrestatarios();
@@ -15,10 +15,11 @@ const Prestatarios = () => {
 
   const fetchPrestatarios = async () => {
     const token = localStorage.getItem("token");
-    
+
     if (!token) {
       setError("No hay token de autenticación. Inicia sesión nuevamente.");
       setLoading(false);
+      navigate('/login'); // Redirect to login if no token
       return;
     }
 
@@ -47,7 +48,6 @@ const Prestatarios = () => {
 
   const handleDesbloquear = async (correo) => {
     const token = localStorage.getItem("token");
-
     try {
       const response = await fetch("http://localhost:8080/api/usuarios/desbloquear", {
         method: "POST",
@@ -63,14 +63,42 @@ const Prestatarios = () => {
       }
 
       setMessage("Cuenta desbloqueada exitosamente.");
-      fetchPrestatarios(); // Recargar la lista de prestatarios
+      fetchPrestatarios();
     } catch (error) {
       setMessage(error.message);
     }
   };
 
+  const tienePrestamosAsociados = async (correo) => {
+    const token = localStorage.getItem("token");
+    try {
+      const response = await fetch(`http://localhost:8080/api/prestamos/usuario/correo/${correo}`, {
+        method: "GET",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error("Error al verificar préstamos asociados.");
+      }
+
+      const prestamos = await response.json();
+      return prestamos.length > 0;
+    } catch (error) {
+      setError(error.message);
+      return true;
+    }
+  };
+
   const handleEliminar = async (correo) => {
     const token = localStorage.getItem("token");
+    const tienePrestamos = await tienePrestamosAsociados(correo);
+    if (tienePrestamos) {
+      setMessage("No se puede eliminar el prestatario porque tiene préstamos asociados.");
+      return;
+    }
 
     if (!window.confirm("¿Estás seguro de eliminar este prestatario?")) return;
 
@@ -88,97 +116,180 @@ const Prestatarios = () => {
       }
 
       setMessage("Prestatario eliminado exitosamente.");
-      fetchPrestatarios(); // Recargar la lista
+      fetchPrestatarios();
     } catch (error) {
       setMessage(error.message);
     }
   };
 
+  const fetchUsuarioDetalles = async (correo) => {
+    const token = localStorage.getItem("token");
+    try {
+      const response = await fetch(`http://localhost:8080/api/usuarios/${correo}`, {
+        method: "GET",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error("Error al obtener los detalles del usuario.");
+      }
+
+      const data = await response.json();
+      setUsuarioModal(data);
+    } catch (error) {
+      setError(error.message);
+    }
+  };
+
+  const closeModal = () => {
+    setUsuarioModal(null);
+  };
+
   return (
-    <div className="container-fluid">
-      <h1 className="text-center">Prestatarios</h1>
+    <div className="container-fluid py-4">
+      <h1 className="text-center mb-4" style={{ color: "#107a54", fontWeight: "bold" }}>
+        Prestatarios
+      </h1>
 
-      <div className="d-flex justify-content-between align-items-center mb-3">
-        <h3 className="fw-semibold">Lista de Prestatarios</h3>
-      
-      </div>
+      <div className="card shadow">
+        <div className="card-header bg-light">
+          <h3 className="fw-semibold m-0">Lista de Prestatarios</h3>
+        </div>
+        <div className="card-body">
+          {/* Messages */}
+          {error && <p className="text-danger text-center mb-3">{error}</p>}
+          {message && (
+            <p
+              className={`text-center mb-3 ${
+                message.includes("exitosamente") ? "text-success" : "text-danger"
+              }`}
+            >
+              {message}
+            </p>
+          )}
 
-      {/* Mostrar mensajes */}
-      {error && <p className="text-danger text-center">{error}</p>}
-      {message && <p className="text-success text-center">{message}</p>}
-
-      <div className="d-flex justify-content-center mt-4">
-        <table className="table table-hover text-center">
-          <thead style={{ backgroundColor: "#107a54", color: "white" }}>
-            <tr>
-              <th>#</th>
-              <th>Nombre Completo</th>
-              <th>Cédula</th>
-              <th>Dirección</th>
-              <th>Email</th>
-              <th>Cuenta Bloqueada</th>
-              <th>Acciones</th>
-            </tr>
-          </thead>
-          <tbody>
-            {loading ? (
-              <tr>
-                <td colSpan="7" className="py-3 text-warning fw-bold">
-                  Cargando...
-                </td>
-              </tr>
-            ) : prestatarios.length === 0 ? (
-              <tr>
-                <td colSpan="7" className="py-3 text-danger fw-bold">
-                  No hay prestatarios registrados
-                </td>
-              </tr>
-            ) : (
-              prestatarios.map((prestatario, index) => (
-                <tr key={index}>
-                  <td>{index + 1}</td>
-                  <td>{prestatario.nombreCompleto}</td>
-                  <td>{prestatario.cedula}</td>
-                  <td>{prestatario.direccion}</td>
-                  <td>{prestatario.correo}</td>
-                  <td className={prestatario.cuentaBloqueada === "Sí" ? "text-danger fw-bold" : "text-success fw-bold"}>
-                    {prestatario.cuentaBloqueada}
-                  </td>
-                  <td>
-                    {/* Botón de eliminar */}
-                    <button
-                      className="btn btn-danger btn-sm me-2"
-                      onClick={() => handleEliminar(prestatario.correo)}
-                    >
-                      <i className="bi bi-trash"></i>
-                    </button>
-
-                    {/* Botón de desbloquear SOLO si la cuenta está bloqueada */}
-                    {prestatario.cuentaBloqueada === "Sí" && (
-                      <button
-                        className="btn btn-warning btn-sm me-2"
-                        onClick={() => handleDesbloquear(prestatario.correo)}
-                      >
-                        <i className="bi bi-unlock"></i> Desbloquear
-                      </button>
-                    )}
-
-                    {/* Botón de ver detalles */}
-                    <button className="btn btn-primary btn-sm">
-                      <Link
-                        to={`/prestatario/${prestatario.cedula}`}
-                        className="text-white text-decoration-none"
-                      >
-                        <i className="bi bi-eye"></i>
-                      </Link>
-                    </button>
-                  </td>
+          <div className="table-responsive">
+            <table className="table table-hover text-center align-middle">
+              <thead style={{ backgroundColor: "#107a54", color: "white" }}>
+                <tr>
+                  <th>#</th>
+                  <th>Nombre Completo</th>
+                  <th>Cédula</th>
+                  <th>Dirección</th>
+                  <th>Email</th>
+                  <th>Estado Cuenta</th>
+                  <th>Acciones</th>
                 </tr>
-              ))
-            )}
-          </tbody>
-        </table>
+              </thead>
+              <tbody>
+                {loading ? (
+                  <tr>
+                    <td colSpan="7" className="py-3 text-warning fw-bold">
+                      Cargando...
+                    </td>
+                  </tr>
+                ) : prestatarios.length === 0 ? (
+                  <tr>
+                    <td colSpan="7" className="py-3 text-danger fw-bold">
+                      No hay prestatarios registrados
+                    </td>
+                  </tr>
+                ) : (
+                  prestatarios.map((prestatario, index) => (
+                    <tr key={index}>
+                      <td>{index + 1}</td>
+                      <td>{prestatario.nombreCompleto}</td>
+                      <td>{prestatario.cedula}</td>
+                      <td>{prestatario.direccion}</td>
+                      <td>{prestatario.correo}</td>
+                      <td>
+                        <span
+                          className={`badge ${
+                            prestatario.cuentaBloqueada === "Sí" ? "bg-danger" : "bg-success"
+                          }`}
+                        >
+                          {prestatario.cuentaBloqueada}
+                        </span>
+                      </td>
+                      <td>
+                        <div className="d-flex justify-content-center gap-2">
+                          <button
+                            className="btn btn-danger btn-sm"
+                            onClick={() => handleEliminar(prestatario.correo)}
+                          >
+                            <i className="bi bi-trash me-1"></i> Eliminar
+                          </button>
+                          {prestatario.cuentaBloqueada === "Sí" && (
+                            <button
+                              className="btn btn-warning btn-sm"
+                              onClick={() => handleDesbloquear(prestatario.correo)}
+                            >
+                              <i className="bi bi-unlock me-1"></i> Desbloquear
+                            </button>
+                          )}
+                          <button
+                            className="btn btn-info btn-sm"
+                            onClick={() => fetchUsuarioDetalles(prestatario.correo)}
+                          >
+                            <i className="bi bi-eye me-1"></i> Detalles
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
+          </div>
+        </div>
       </div>
+
+      {/* Modal for User Details */}
+      {usuarioModal && (
+        <div
+          className="modal fade show"
+          tabIndex="-1"
+          style={{ display: "block", backgroundColor: "rgba(0,0,0,0.5)" }}
+        >
+          <div className="modal-dialog modal-sm">
+            <div className="modal-content">
+              <div className="modal-header">
+                <h5 className="modal-title">Detalles del Usuario</h5>
+                <button
+                  type="button"
+                  className="btn-close"
+                  onClick={closeModal}
+                ></button>
+              </div>
+              <div className="modal-body">
+                <p><strong>Nombre:</strong> {usuarioModal.nombre} {usuarioModal.apellido}</p>
+                <p><strong>Cédula:</strong> {usuarioModal.cedula}</p>
+                <p><strong>Correo:</strong> {usuarioModal.correo}</p>
+                <p><strong>Dirección:</strong> {usuarioModal.direccion}</p>
+                <p><strong>Ingresos:</strong> ${usuarioModal.ingresos?.toLocaleString('es-ES', { minimumFractionDigits: 2 }) || "N/A"}</p>
+                <p><strong>Historial Crediticio:</strong> {usuarioModal.historialCred || "N/A"}</p>
+                <p><strong>Cuenta Bloqueada:</strong> 
+                  <span className={`badge ${usuarioModal.cuentaBloqueada ? "bg-danger" : "bg-success"}`}>
+                    {usuarioModal.cuentaBloqueada ? "Sí" : "No"}
+                  </span>
+                </p>
+              </div>
+              <div className="modal-footer">
+                <button
+                  type="button"
+                  className="btn btn-secondary"
+                  onClick={closeModal}
+                >
+                  Cerrar
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

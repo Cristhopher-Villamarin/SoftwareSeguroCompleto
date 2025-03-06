@@ -36,6 +36,8 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/api/usuarios/registro",
                                 "/api/usuarios/login",
+                                "/api/usuarios/solicitar-recuperacion",
+                                "/api/usuarios/restablecer-contrasena",
                                 "/api/usuarios/registro-admin").permitAll() // ✅ Corregido
                         .requestMatchers(HttpMethod.GET, "/api/public/**").permitAll() // ✅ Permitir GET públicos opcionalmente
                         .anyRequest().authenticated() // 🔒 Todo lo demás requiere autenticación

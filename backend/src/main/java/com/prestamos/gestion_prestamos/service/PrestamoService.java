@@ -104,6 +104,12 @@ public class PrestamoService {
                 .orElseThrow(() -> new RuntimeException("Préstamo no encontrado con ID: " + idPrestamo));
     }
 
+    /**
+     * Obtener todos los préstamos registrados en el sistema.
+     */
+    public List<Prestamo> obtenerTodosLosPrestamos() {
+        return prestamoRepository.findAll();
+    }
 
     /**
      * Cambiar el estado de un préstamo.

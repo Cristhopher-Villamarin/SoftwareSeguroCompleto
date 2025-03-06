@@ -1,24 +1,41 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import "bootstrap/dist/css/bootstrap.min.css";
-import { FaArrowLeft } from "react-icons/fa";
+import { FaArrowLeft, FaEye, FaEyeSlash } from "react-icons/fa";
 import DOMPurify from "dompurify";
-import { jwtDecode } from "jwt-decode"; // ✅ Importación correcta
+import { jwtDecode } from "jwt-decode";
 import "../../styles/Login.css";
 
-const Login = () => {
+const Login = ({ setIsAuthenticated }) => { // Añadimos setIsAuthenticated como prop
   const [correo, setCorreo] = useState("");
   const [contrasena, setContrasena] = useState("");
   const [error, setError] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [showPassword, setShowPassword] = useState(false); // Estado para mostrar/ocultar contraseña
   const navigate = useNavigate();
 
-  // 📌 Limpiar el localStorage cuando el usuario entra al login
   useEffect(() => {
-    localStorage.removeItem("token"); // Eliminar el token
+    localStorage.removeItem("token");
   }, []);
 
   const sanitizeInput = (input) => DOMPurify.sanitize(input.trim());
+
+  const formatBlockedMessage = (message) => {
+    const dateMatch = message.match(/(\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d+)/);
+    if (dateMatch) {
+      const date = new Date(dateMatch[0]);
+      const formattedDate = date.toLocaleString("es-ES", {
+        year: "numeric",
+        month: "long",
+        day: "numeric",
+        hour: "2-digit",
+        minute: "2-digit",
+        second: "2-digit",
+      });
+      return `Cuenta bloqueada. Intente nuevamente después del ${formattedDate}`;
+    }
+    return message;
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -45,27 +62,29 @@ const Login = () => {
 
       if (!response.ok) {
         const data = await response.json();
-        throw new Error(data?.error || "Error en el inicio de sesión.");
+        const errorMessage = data?.error || "Error en el inicio de sesión.";
+        throw new Error(errorMessage);
       }
 
       const data = await response.json();
       const token = data.token;
 
-      // 📌 Almacenar solo el token en localStorage
       localStorage.setItem("token", token);
+      setIsAuthenticated(true); // Actualizamos el estado de autenticación
 
-      // 📌 Decodificar el token para obtener el rol y redirigir
       const decodedToken = jwtDecode(token);
       const rol = decodedToken.rol;
 
-      // 📌 Redirigir según el rol del usuario
       navigate(rol === "USUARIO" ? "/user/home" : "/admin/dashboard");
-
     } catch (err) {
-      setError(err.message || "Error en el servidor.");
+      setError(formatBlockedMessage(err.message));
     } finally {
       setIsSubmitting(false);
     }
+  };
+
+  const togglePasswordVisibility = () => {
+    setShowPassword(!showPassword);
   };
 
   return (
@@ -110,14 +129,25 @@ const Login = () => {
 
               <div className="mb-3">
                 <label className="form-label">Contraseña</label>
-                <input
-                  type="password"
-                  className="form-control"
-                  value={contrasena}
-                  onChange={(e) => setContrasena(e.target.value)}
-                  required
-                  placeholder="Ingrese su contraseña"
-                />
+                <div className="input-group">
+                  <input
+                    type={showPassword ? "text" : "password"}
+                    className="form-control"
+                    value={contrasena}
+                    onChange={(e) => setContrasena(e.target.value)}
+                    required
+                    placeholder="Ingrese su contraseña"
+                    style={{ paddingRight: "2.5rem" }} // Espacio para el ícono
+                  />
+                  <button
+                    type="button"
+                    className="btn btn-outline-secondary"
+                    onClick={togglePasswordVisibility}
+                    style={{ borderLeft: "none" }}
+                  >
+                    {showPassword ? <FaEyeSlash /> : <FaEye />}
+                  </button>
+                </div>
               </div>
 
               <button type="submit" className="btn w-100 btn-custom" disabled={isSubmitting}>
@@ -125,11 +155,28 @@ const Login = () => {
               </button>
             </form>
 
+            {/* Enlace de Recuperación de Contraseña */}
+            <div className="text-center mt-3">
+              <p className="mb-0">
+                <span
+                  className="text-primary fw-bold cursor-pointer"
+                  onClick={() => navigate("/auth/recuperar")}
+                  style={{ cursor: "pointer" }}
+                >
+                  ¿Olvidaste tu contraseña?
+                </span>
+              </p>
+            </div>
+
             {/* Enlace de Registro */}
             <div className="text-center mt-3">
               <p className="mb-0">
                 ¿No tienes una cuenta?{" "}
-                <span className="text-success fw-bold cursor-pointer" onClick={() => navigate("/auth/registro")}>
+                <span
+                  className="text-success fw-bold cursor-pointer"
+                  onClick={() => navigate("/auth/registro")}
+                  style={{ cursor: "pointer" }}
+                >
                   Regístrate aquí
                 </span>
               </p>

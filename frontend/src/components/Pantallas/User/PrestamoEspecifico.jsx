@@ -51,14 +51,17 @@ const PrestamoEspecifico = () => {
     setSuccessMessage("");
 
     try {
-      const response = await fetch(`http://localhost:8080/api/usuarios/${datosUsuario.correo}/actualizar-finanzas`, {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({ ingresos: parseFloat(ingresos), historialCred }),
-      });
+      const response = await fetch(
+        `http://localhost:8080/api/usuarios/${datosUsuario.correo}/actualizar-finanzas`,
+        {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({ ingresos: parseFloat(ingresos), historialCred }),
+        }
+      );
 
       if (!response.ok) {
         const errorText = await response.text();
@@ -87,7 +90,7 @@ const PrestamoEspecifico = () => {
       montoMaximo = capitalMensualMax * parseInt(plazoMeses);
     }
 
-    return montoMaximo.toFixed(2);
+    return montoMaximo.toLocaleString("es-ES", { minimumFractionDigits: 2 });
   };
 
   const calcularPrestamo = () => {
@@ -106,7 +109,7 @@ const PrestamoEspecifico = () => {
     }
 
     const montoMaximo = calcularMontoMaximo();
-    if (parseFloat(montoSolicitado) > montoMaximo) {
+    if (parseFloat(montoSolicitado) > parseFloat(montoMaximo.replace(/,/g, ""))) {
       setError(
         `El monto solicitado ($${montoSolicitado}) excede el máximo permitido de $${montoMaximo} según tus ingresos y plazo.`
       );
@@ -138,8 +141,8 @@ const PrestamoEspecifico = () => {
       montoSolicitado,
       plazoMeses,
       tasaInteres: tasaInteresAnual,
-      montoTotalCuota: cuotaMensual.toFixed(2),
-      montoTotal: montoTotal.toFixed(2),
+      montoTotalCuota: cuotaMensual.toLocaleString("es-ES", { minimumFractionDigits: 2 }),
+      montoTotal: montoTotal.toLocaleString("es-ES", { minimumFractionDigits: 2 }),
     });
   };
 
@@ -179,7 +182,6 @@ const PrestamoEspecifico = () => {
 
       const data = await response.json();
       setIdPrestamo(data.idPrestamo);
-      localStorage.setItem("idPrestamo", data.idPrestamo);
 
       setSuccessMessage(
         `¡Solicitud de préstamo registrada con éxito! ID: ${data.idPrestamo}. Estado: PENDIENTE. Un administrador revisará tu solicitud.`
@@ -195,104 +197,156 @@ const PrestamoEspecifico = () => {
   };
 
   return (
-    <div className="container-fluid">
-      <div className="row formulario-container">
-        <div className="col-md-6 formulario">
-          <h2 className="text-center">Solicitar Préstamo</h2>
+    <div className="container-fluid py-4">
+      <h1 className="text-center mb-4" style={{ color: "#107a54", fontWeight: "bold" }}>
+        Solicitar Préstamo
+      </h1>
 
-          {successMessage && (
-            <p className="alert alert-success text-center">{successMessage}</p>
-          )}
+      <div className="row">
+        {/* Formulario de Solicitud */}
+        <div className="col-md-6 mb-4">
+          <div className="card shadow">
+            <div className="card-header bg-light">
+              <h3 className="fw-semibold m-0">Datos del Préstamo</h3>
+            </div>
+            <div className="card-body">
+              {successMessage && (
+                <p className="alert alert-success text-center">{successMessage}</p>
+              )}
 
-          {error && <p className="alert alert-danger text-center">{error}</p>}
+              {error && <p className="alert alert-danger text-center">{error}</p>}
 
-          {/* 📌 Ingresos del usuario */}
-          <div className="mb-3">
-            <label className="form-label">Ingresos Mensuales</label>
-            <input
-              type="number"
-              className="form-control"
-              value={ingresos}
-              onChange={(e) => setIngresos(e.target.value)}
-              min="100"
-              required
-            />
+              {/* Ingresos del usuario */}
+              <div className="mb-3">
+                <label className="form-label">Ingresos Mensuales</label>
+                <input
+                  type="number"
+                  className="form-control"
+                  value={ingresos}
+                  onChange={(e) => setIngresos(e.target.value)}
+                  min="100"
+                  required
+                />
+              </div>
+
+              {/* Historial Crediticio */}
+              <div className="mb-3">
+                <label className="form-label">Historial Crediticio</label>
+                <input
+                  type="text"
+                  className="form-control"
+                  value={historialCred}
+                  disabled
+                />
+              </div>
+
+              <button
+                className="btn btn-warning w-100 mb-3"
+                onClick={actualizarFinanzas}
+                disabled={loadingFinanzas}
+              >
+                {loadingFinanzas ? "Actualizando..." : "Actualizar Finanzas"}
+              </button>
+
+              {/* Monto Solicitado */}
+              <div className="mb-3">
+                <label className="form-label">¿Cuánto dinero necesitas?</label>
+                <input
+                  type="number"
+                  className="form-control"
+                  value={montoSolicitado}
+                  onChange={(e) => setMontoSolicitado(e.target.value)}
+                  min="300"
+                  required
+                />
+                {ingresos && (
+                  <small className="form-text text-muted">
+                    Monto máximo permitido: ${calcularMontoMaximo()}
+                  </small>
+                )}
+              </div>
+
+              {/* Plazo en meses */}
+              <div className="mb-3">
+                <label className="form-label">¿En cuánto tiempo quieres pagarlo?</label>
+                <select
+                  className="form-select"
+                  value={plazoMeses}
+                  onChange={(e) => setPlazoMeses(e.target.value)}
+                >
+                  <option value="3">3 meses</option>
+                  <option value="6">6 meses</option>
+                  <option value="9">9 meses</option>
+                  <option value="12">12 meses</option>
+                  <option value="24">24 meses</option>
+                </select>
+              </div>
+
+              {/* Tipo de amortización */}
+              <div className="mb-3">
+                <label className="form-label">Tipo de Amortización</label>
+                <select
+                  className="form-select"
+                  value={tipoPago}
+                  onChange={(e) => setTipoPago(e.target.value)}
+                >
+                  <option value="FRANCES">Francés (Cuotas constantes)</option>
+                  <option value="ALEMAN">Alemán (Capital constante)</option>
+                </select>
+              </div>
+
+              {/* Botón Calcular Préstamo */}
+              <button className="btn btn-info w-100 mb-2" onClick={calcularPrestamo}>
+                Calcular Préstamo
+              </button>
+
+              {/* Botón Solicitar Préstamo */}
+              <button
+                className="btn btn-success w-100"
+                onClick={crearPrestamo}
+                disabled={!detallePrestamo}
+              >
+                Solicitar Préstamo
+              </button>
+            </div>
           </div>
-
-          {/* 📌 Historial Crediticio */}
-          <div className="mb-3">
-            <label className="form-label">Historial Crediticio</label>
-            <input type="text" className="form-control" value={historialCred} disabled />
-          </div>
-
-          <button className="btn btn-warning w-100" onClick={actualizarFinanzas} disabled={loadingFinanzas}>
-            {loadingFinanzas ? "Actualizando..." : "Actualizar Finanzas"}
-          </button>
-
-          <hr />
-
-          {/* 📌 Monto Solicitado */}
-          <div className="mb-3">
-            <label className="form-label">¿Cuánto dinero necesitas?</label>
-            <input
-              type="number"
-              className="form-control"
-              value={montoSolicitado}
-              onChange={(e) => setMontoSolicitado(e.target.value)}
-              min="300"
-              required
-            />
-            {ingresos && (
-              <small className="form-text text-muted">
-                Monto máximo permitido: ${calcularMontoMaximo()}
-              </small>
-            )}
-          </div>
-
-          {/* 📌 Plazo en meses */}
-          <div className="mb-3">
-            <label className="form-label">¿En cuánto tiempo quieres pagarlo?</label>
-            <select className="form-select" value={plazoMeses} onChange={(e) => setPlazoMeses(e.target.value)}>
-              <option value="3">3 meses</option>
-              <option value="6">6 meses</option>
-              <option value="9">9 meses</option>
-              <option value="12">12 meses</option>
-              <option value="24">24 meses</option>
-            </select>
-          </div>
-
-          {/* 📌 Tipo de amortización */}
-          <div className="mb-3">
-            <label className="form-label">Tipo de Amortización</label>
-            <select className="form-select" value={tipoPago} onChange={(e) => setTipoPago(e.target.value)}>
-              <option value="FRANCES">Francés (Cuotas constantes)</option>
-              <option value="ALEMAN">Alemán (Capital constante)</option>
-            </select>
-          </div>
-
-          {/* 📌 Botón Calcular Préstamo */}
-          <button className="btn btn-info w-100" onClick={calcularPrestamo}>
-            Calcular Préstamo
-          </button>
-
-          {/* 📌 Botón Solicitar Préstamo */}
-          <button className="btn btn-success w-100 mt-3" onClick={crearPrestamo} disabled={!detallePrestamo}>
-            Solicitar Préstamo
-          </button>
         </div>
 
-        {/* 📌 Previsualización del préstamo */}
-        <div className="col-md-6 resultado-container">
-          {detallePrestamo && (
-            <div className="resultado p-3 border rounded">
-              <h2 className="text-center">Detalle del Préstamo</h2>
-              <p className="detalle">Monto Solicitado: <strong>${detallePrestamo.montoSolicitado}</strong></p>
-              <p className="detalle">Plazo: <strong>{detallePrestamo.plazoMeses} meses</strong></p>
-              <p className="detalle">Tasa de Interés: <strong>{detallePrestamo.tasaInteres}%</strong></p>
-              <p className="detalle">Monto Total: <strong>${detallePrestamo.montoTotal}</strong></p>
-              <p className="detalle">Cuota Mensual Aproximada: <strong>${detallePrestamo.montoTotalCuota}</strong></p>
+        {/* Previsualización del préstamo */}
+        <div className="col-md-6 mb-4">
+          <div className="card shadow">
+            <div className="card-header bg-light">
+              <h3 className="fw-semibold m-0">Detalle del Préstamo</h3>
             </div>
-          )}
+            <div className="card-body">
+              {detallePrestamo ? (
+                <div>
+                  <p>
+                    <strong>Monto Solicitado:</strong>{" "}
+                    ${detallePrestamo.montoSolicitado.toLocaleString("es-ES", {
+                      minimumFractionDigits: 2,
+                    })}
+                  </p>
+                  <p>
+                    <strong>Plazo:</strong> {detallePrestamo.plazoMeses} meses
+                  </p>
+                  <p>
+                    <strong>Tasa de Interés:</strong> {detallePrestamo.tasaInteres}%
+                  </p>
+                  <p>
+                    <strong>Monto Total:</strong> ${detallePrestamo.montoTotal}
+                  </p>
+                  <p>
+                    <strong>Cuota Mensual Aproximada:</strong> ${detallePrestamo.montoTotalCuota}
+                  </p>
+                </div>
+              ) : (
+                <p className="text-center text-muted">
+                  Calcula el préstamo para ver los detalles.
+                </p>
+              )}
+            </div>
+          </div>
         </div>
       </div>
     </div>

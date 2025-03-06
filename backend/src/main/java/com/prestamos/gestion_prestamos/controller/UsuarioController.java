@@ -114,4 +114,25 @@ public class UsuarioController {
             return ResponseEntity.badRequest().body(ex.getMessage());
         }
     }
+
+    @PostMapping("/solicitar-recuperacion")
+    public ResponseEntity<?> solicitarRecuperacion(@RequestBody Map<String, String> request) {
+        try {
+            usuarioService.solicitarRecuperacion(request.get("correo"));
+            return ResponseEntity.ok(Map.of("mensaje", "Si el correo está registrado, recibirás instrucciones."));
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
+        }
+    }
+
+    @PostMapping("/restablecer-contrasena")
+    public ResponseEntity<?> restablecerContrasena(@RequestBody Map<String, String> request) {
+        try {
+            usuarioService.restablecerContrasena(request.get("token"), request.get("nuevaContrasena"));
+            return ResponseEntity.ok(Map.of("mensaje", "Contraseña restablecida exitosamente."));
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
+        }
+    }
+
 }

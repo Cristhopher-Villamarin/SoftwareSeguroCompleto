@@ -1,8 +1,15 @@
 import { Link } from "react-router-dom";
+import { useEffect } from "react";
 import "bootstrap/dist/css/bootstrap.min.css"; // Importamos Bootstrap
 import { FaMoneyCheckAlt, FaUsers, FaCreditCard } from "react-icons/fa";
 
 const Principal = () => {
+
+ // 📌 Limpiar el localStorage cuando el usuario entra al login
+  useEffect(() => {
+    localStorage.removeItem("token"); // Eliminar el token
+  }, []);
+
   return (
     <div className="container-fluid p-0">
       {/* Navbar */}

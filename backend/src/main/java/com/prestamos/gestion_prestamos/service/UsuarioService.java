@@ -5,11 +5,14 @@ import com.prestamos.gestion_prestamos.model.Usuario;
 import com.prestamos.gestion_prestamos.repository.UsuarioRepository;
 import com.prestamos.gestion_prestamos.security.JwtUtil;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.mail.SimpleMailMessage;
+import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
 import java.util.Optional;
+import java.util.UUID;
 
 @Service
 public class UsuarioService {
@@ -17,12 +20,14 @@ public class UsuarioService {
     private final UsuarioRepository usuarioRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtUtil jwtUtil;
+    private JavaMailSender mailSender;
 
     @Autowired
-    public UsuarioService(UsuarioRepository usuarioRepository, PasswordEncoder passwordEncoder, JwtUtil jwtUtil) {
+    public UsuarioService(UsuarioRepository usuarioRepository, PasswordEncoder passwordEncoder, JwtUtil jwtUtil, JavaMailSender mailSender) {
         this.usuarioRepository = usuarioRepository;
         this.passwordEncoder = passwordEncoder;
         this.jwtUtil = jwtUtil;
+        this.mailSender = mailSender;
     }
 
     public Usuario registrarUsuario(Usuario usuario) {
@@ -35,6 +40,52 @@ public class UsuarioService {
         usuario.setFechaDesbloqueo(null);
 
         return usuarioRepository.save(usuario);
+    }
+
+    public void solicitarRecuperacion(String correo) {
+        Optional<Usuario> usuarioOptional = usuarioRepository.findByCorreo(correo);
+
+        if (usuarioOptional.isPresent()) {
+            Usuario usuario = usuarioOptional.get();
+
+            String token = UUID.randomUUID().toString();
+            usuario.setTokenRecuperacion(token);
+            usuario.setExpiracionTokenRecuperacion(LocalDateTime.now().plusHours(2));
+            usuarioRepository.save(usuario);
+
+            enviarCorreoRecuperacion(usuario.getCorreo(), token);
+        }
+
+        // Siempre termina sin excepción por seguridad.
+    }
+
+
+
+    private void enviarCorreoRecuperacion(String correo, String token) {
+        SimpleMailMessage mensaje = new SimpleMailMessage();
+        mensaje.setFrom("cristhophervillamarin7@gmail.com");
+        mensaje.setTo(correo);
+        mensaje.setSubject("Recuperación de contraseña");
+
+        String enlace = "http://localhost:3000/auth/restablecer";
+        mensaje.setText("Hola, para restablecer tu contraseña, copia el siguiente código de seguridad: " + token+" y haz clic en el siguiente enlace: " + enlace);
+
+
+        mailSender.send(mensaje);
+    }
+
+    public void restablecerContrasena(String token, String nuevaContrasena) {
+        Usuario usuario = usuarioRepository.findByTokenRecuperacion(token)
+                .orElseThrow(() -> new RuntimeException("El token es inválido o ya ha expirado."));
+
+        if (usuario.getExpiracionTokenRecuperacion().isBefore(LocalDateTime.now())) {
+            throw new RuntimeException("El token ha expirado. Solicita uno nuevo.");
+        }
+
+        usuario.setContrasenaHash(passwordEncoder.encode(nuevaContrasena));
+        usuario.setTokenRecuperacion(null);
+        usuario.setExpiracionTokenRecuperacion(null);
+        usuarioRepository.save(usuario);
     }
 
     public Usuario registrarAdmin(Usuario usuario) {

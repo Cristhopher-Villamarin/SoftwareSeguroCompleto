@@ -1,6 +1,7 @@
 package com.prestamos.gestion_prestamos.model;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.*;
 import lombok.Getter;
@@ -57,6 +58,12 @@ public class Cuota {
     // Constructor vacío necesario para JPA
     public Cuota() {}
 
+    // Método para obtener el idPrestamo explícitamente y incluirlo en el JSON
+    @JsonProperty("idPrestamo")
+    public Long getIdPrestamo() {
+        return prestamo != null ? prestamo.getIdPrestamo() : null;
+    }
+
     // Constructor con todos los campos
     public Cuota(Long idCuota, Prestamo prestamo, Integer numeroCuota, Double interesCuota, Double capitalCuota, Double montoTotalCuota, LocalDate fechaVencimiento, String estado, LocalDate fechaPago, Double interesMora) {
         this.idCuota = idCuota;
@@ -103,6 +110,8 @@ public class Cuota {
             this.interesMora = diasRetraso * tasaMoraDiaria * this.capitalCuota;
         }
     }
+
+
 
     public Prestamo getPrestamo() {
         return prestamo;

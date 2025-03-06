@@ -67,6 +67,12 @@ public class Usuario {
     @Column(updatable = false)
     private LocalDateTime fechaCreacion; // Fecha automática al crear usuario
 
+    @Column(nullable = true, unique = true)
+    private String tokenRecuperacion;
+
+    @Column(nullable = true)
+    private LocalDateTime expiracionTokenRecuperacion;
+
     public Usuario() {}
 
     public Usuario(Long idUsuario, String nombre, String apellido, String cedula, LocalDate fechaNac, String direccion, Double ingresos, Integer historialCred, String correo, String contrasenaHash, Rol rol, Integer intentosFallidos, Boolean cuentaBloqueada, LocalDateTime fechaCreacion) {
@@ -88,6 +94,22 @@ public class Usuario {
 
     public String getNombre() {
         return nombre;
+    }
+
+    public String getTokenRecuperacion() {
+        return tokenRecuperacion;
+    }
+
+    public void setTokenRecuperacion(String tokenRecuperacion) {
+        this.tokenRecuperacion = tokenRecuperacion;
+    }
+
+    public LocalDateTime getExpiracionTokenRecuperacion() {
+        return expiracionTokenRecuperacion;
+    }
+
+    public void setExpiracionTokenRecuperacion(LocalDateTime expiracionTokenRecuperacion) {
+        this.expiracionTokenRecuperacion = expiracionTokenRecuperacion;
     }
 
     public void setNombre(String nombre) {

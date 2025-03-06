@@ -35,11 +35,7 @@ const SideBarAdmin = () => {
             <FaCreditCard className="icon" /> Pagos
           </Link>
         </li>
-        <li>
-          <Link to="/admin/solicitudesAdmin">
-            <FaCreditCard className="icon" /> Solicitudes
-          </Link>
-        </li>
+        
       </ul>
 
       {/* 🔹 Botón de Salir */}

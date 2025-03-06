@@ -125,4 +125,20 @@ public class PrestamoController {
         return ResponseEntity.ok(usuarios);
     }
 
+    /**
+     * Obtener todos los préstamos registrados en el sistema (solo Admin).
+     */
+    @PreAuthorize("hasRole('ADMIN')")
+    @GetMapping("/todos")
+    public ResponseEntity<?> obtenerTodosLosPrestamos() {
+        try {
+            List<Prestamo> prestamos = prestamoService.obtenerTodosLosPrestamos();
+            return ResponseEntity.ok(prestamos);
+        } catch (Exception e) {
+            Map<String, Object> errorResponse = new HashMap<>();
+            errorResponse.put("error", "Error inesperado al obtener todos los préstamos: " + e.getMessage());
+            return ResponseEntity.status(500).body(errorResponse);
+        }
+    }
+
 }

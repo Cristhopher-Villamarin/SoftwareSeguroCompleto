@@ -82,4 +82,12 @@ public class CuotaService {
             }
         }
     }
+
+    /**
+     * Obtener todas las cuotas con sus datos completos, incluyendo el idPrestamo.
+     */
+    public List<Cuota> obtenerTodasLasCuotas() {
+        return cuotaRepository.findAllWithPrestamo();
+    }
+
 }

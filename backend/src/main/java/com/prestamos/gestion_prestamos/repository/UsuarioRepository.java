@@ -28,4 +28,7 @@ public interface UsuarioRepository extends JpaRepository<Usuario, Long> {
      * Contar usuarios con un rol específico.
      */
     long countByRol(String rol);
+
+    Optional<Usuario> findByTokenRecuperacion(String tokenRecuperacion);
+
 }
