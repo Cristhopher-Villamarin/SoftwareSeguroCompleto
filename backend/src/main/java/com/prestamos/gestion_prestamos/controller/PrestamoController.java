@@ -141,4 +141,11 @@ public class PrestamoController {
         }
     }
 
+    @PreAuthorize("hasRole('ADMIN')")
+    @PutMapping("/{id}/desaprobar")
+    public ResponseEntity<Prestamo> desaprobarPrestamo(@PathVariable Long id) {
+        Prestamo prestamoDesaprobado = prestamoService.desaprobarPrestamo(id);
+        return ResponseEntity.ok(prestamoDesaprobado);
+    }
+
 }

@@ -66,11 +66,16 @@ public class PrestamoService {
         String usuarioAutenticado = getUsuarioAutenticado();
         String usuarioCorreo = prestamo.getUsuario().getCorreo();
 
-        long prestamosActivos = prestamoRepository.countByUsuario_IdUsuarioAndEstadoPrestamo(prestamo.getUsuario().getIdUsuario(), "ACTIVO");
-        if (prestamosActivos > 0) {
+        // Validar si el usuario tiene préstamos en estado PENDIENTE o ACTIVO
+        long prestamosPendientesOActivos = prestamoRepository.countByUsuario_IdUsuarioAndEstadoPrestamoIn(
+                prestamo.getUsuario().getIdUsuario(),
+                List.of("PENDIENTE", "ACTIVO")
+        );
+
+        if (prestamosPendientesOActivos > 0) {
             ActionLogger.logAction(usuarioAutenticado != null ? usuarioAutenticado : usuarioCorreo,
-                    "Intentó crear un préstamo pero ya tiene préstamos activos");
-            throw new RuntimeException("El usuario ya tiene préstamos activos y no puede solicitar otro.");
+                    "Intentó crear un préstamo pero ya tiene préstamos pendientes o activos");
+            throw new RuntimeException("El usuario ya tiene préstamos en estado PENDIENTE o ACTIVO y no puede solicitar otro.");
         }
 
         double montoTotal;
@@ -268,6 +273,28 @@ public class PrestamoService {
         ActionLogger.logAction(usuarioAutenticado != null ? usuarioAutenticado : "Sistema",
                 "Consultó préstamos con estado: " + estadoPrestamo);
         return prestamos;
+    }
+
+    public Prestamo desaprobarPrestamo(Long idPrestamo) {
+        String usuarioAutenticado = getUsuarioAutenticado();
+        Prestamo prestamo = prestamoRepository.findById(idPrestamo)
+                .orElseThrow(() -> {
+                    ActionLogger.logAction(usuarioAutenticado != null ? usuarioAutenticado : "Sistema",
+                            "Intentó desaprobar un préstamo no encontrado con ID: " + idPrestamo);
+                    return new RuntimeException("Préstamo no encontrado con ID: " + idPrestamo);
+                });
+
+        if (!"PENDIENTE".equals(prestamo.getEstadoPrestamo())) {
+            ActionLogger.logAction(usuarioAutenticado != null ? usuarioAutenticado : "Sistema",
+                    "Intentó desaprobar un préstamo con ID: " + idPrestamo + " que no está en estado PENDIENTE");
+            throw new RuntimeException("Solo los préstamos en estado PENDIENTE pueden ser desaprobados.");
+        }
+
+        prestamo.setEstadoPrestamo("CANCELADO");
+        Prestamo updatedPrestamo = prestamoRepository.save(prestamo);
+        ActionLogger.logAction(usuarioAutenticado != null ? usuarioAutenticado : "Sistema",
+                "Desaprobó el préstamo con ID: " + idPrestamo + " (estado cambiado a CANCELADO)");
+        return updatedPrestamo;
     }
 
     public List<Map<String, String>> obtenerUsuariosConPrestamos() {

@@ -1,6 +1,6 @@
-projectKey=SoftwareSeguro
+projectKey=com.prestamos:gestion-prestamos
 serverUrl=http://localhost:9000
 serverVersion=25.1.0.102122
-dashboardUrl=http://localhost:9000/dashboard?id=SoftwareSeguro
-ceTaskId=51098474-279a-4209-99be-86a5deb7f69d
-ceTaskUrl=http://localhost:9000/api/ce/task?id=51098474-279a-4209-99be-86a5deb7f69d
+dashboardUrl=http://localhost:9000/dashboard?id=com.prestamos%3Agestion-prestamos
+ceTaskId=58c550a8-997b-4de9-90c5-9fc292485880
+ceTaskUrl=http://localhost:9000/api/ce/task?id=58c550a8-997b-4de9-90c5-9fc292485880

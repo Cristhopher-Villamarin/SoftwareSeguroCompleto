@@ -47,4 +47,6 @@ public interface PrestamoRepository extends JpaRepository<Prestamo, Long> {
      */
     @Query("SELECT DISTINCT p.usuario FROM Prestamo p")
     List<Usuario> obtenerUsuariosConPrestamos();
+
+    long countByUsuario_IdUsuarioAndEstadoPrestamoIn(Long idUsuario, List<String> estados);
 }
