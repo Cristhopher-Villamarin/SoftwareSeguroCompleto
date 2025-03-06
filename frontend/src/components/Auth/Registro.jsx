@@ -4,6 +4,7 @@ import "bootstrap/dist/css/bootstrap.min.css";
 import { FaArrowLeft, FaEye, FaEyeSlash } from "react-icons/fa";
 import DOMPurify from "dompurify";
 import "../../styles/Registro.css";
+import BASE_URLS from "../../ApiConfig"; // Import the base URLs
 
 function Registro() {
   const navigate = useNavigate();
@@ -16,12 +17,12 @@ function Registro() {
     correo: "",
     contrasenaHash: "",
   });
-  const [confirmarContrasena, setConfirmarContrasena] = useState(""); // Nuevo estado para confirmar contraseña
+  const [confirmarContrasena, setConfirmarContrasena] = useState("");
   const [error, setError] = useState("");
   const [successMessage, setSuccessMessage] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [showPassword, setShowPassword] = useState(false); // Visibilidad de contraseña
-  const [showConfirmPassword, setShowConfirmPassword] = useState(false); // Visibilidad de confirmar contraseña
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
   const validateForm = () => {
     const { nombre, apellido, cedula, fechaNac, direccion, correo, contrasenaHash } = formData;
@@ -71,7 +72,7 @@ function Registro() {
     setIsSubmitting(true);
 
     try {
-      const response = await fetch("http://localhost:8080/api/usuarios/registro", {
+      const response = await fetch(`${BASE_URLS.USUARIOS}/registro`, { // Use BASE_URLS.USUARIOS
         method: "POST",
         headers: {
           "Content-Type": "application/json",

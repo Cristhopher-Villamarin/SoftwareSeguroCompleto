@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { jwtDecode } from "jwt-decode";
-import { Modal, Button } from "react-bootstrap"; // Usar Modal de react-bootstrap
+import { Modal, Button } from "react-bootstrap";
+import BASE_URLS from "../../../ApiConfig"; // Import the base URLs
 
 const Amortizacion = () => {
   const [cuotas, setCuotas] = useState([]);
@@ -8,7 +9,7 @@ const Amortizacion = () => {
   const [error, setError] = useState("");
   const [cuotaSeleccionada, setCuotaSeleccionada] = useState(null);
   const [montoPendiente, setMontoPendiente] = useState(null);
-  const [showModal, setShowModal] = useState(false); // Estado para el modal
+  const [showModal, setShowModal] = useState(false);
 
   const obtenerCorreoDesdeToken = () => {
     const token = localStorage.getItem("token");
@@ -33,7 +34,7 @@ const Amortizacion = () => {
 
       try {
         const prestamoResponse = await fetch(
-          `http://localhost:8080/api/prestamos/usuario/correo/${correo}`,
+          `${BASE_URLS.PRESTAMOS}/usuario/correo/${correo}`, // Use BASE_URLS.PRESTAMOS
           {
             headers: {
               Authorization: `Bearer ${localStorage.getItem("token")}`,
@@ -60,7 +61,7 @@ const Amortizacion = () => {
         setMontoPendiente(prestamoActivo.montoPendiente);
 
         const cuotasResponse = await fetch(
-          `http://localhost:8080/api/cuotas/prestamo/${prestamoActivo.idPrestamo}`,
+          `${BASE_URLS.CUOTAS}/prestamo/${prestamoActivo.idPrestamo}`, // Use BASE_URLS.CUOTAS
           {
             headers: {
               Authorization: `Bearer ${localStorage.getItem("token")}`,
@@ -87,7 +88,7 @@ const Amortizacion = () => {
   const pagarCuota = async (idCuota) => {
     setError("");
     try {
-      const response = await fetch(`http://localhost:8080/api/cuotas/${idCuota}/pagar`, {
+      const response = await fetch(`${BASE_URLS.CUOTAS}/${idCuota}/pagar`, { // Use BASE_URLS.CUOTAS
         method: "POST",
         headers: {
           Authorization: `Bearer ${localStorage.getItem("token")}`,

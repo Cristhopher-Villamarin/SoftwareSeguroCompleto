@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { jwtDecode } from "jwt-decode";
 import "../../../styles/prestamos.css";
 import { toast } from "react-toastify";
+import BASE_URLS from "../../../ApiConfig"; // Import the base URLs
 
 const Prestamos = () => {
   const [prestamos, setPrestamos] = useState([]);
@@ -41,7 +42,7 @@ const Prestamos = () => {
       setLoading(true);
 
       const response = await fetch(
-        `http://localhost:8080/api/prestamos/usuario/correo/${usuarioEmail}`,
+        `${BASE_URLS.PRESTAMOS}/usuario/correo/${usuarioEmail}`, // Use BASE_URLS.PRESTAMOS
         {
           method: "GET",
           headers: {
@@ -83,7 +84,7 @@ const Prestamos = () => {
 
     try {
       const response = await fetch(
-        `http://localhost:8080/api/prestamos/usuario/correo/${usuarioEmail}`,
+        `${BASE_URLS.PRESTAMOS}/usuario/correo/${usuarioEmail}`, // Use BASE_URLS.PRESTAMOS
         {
           method: "GET",
           headers: {

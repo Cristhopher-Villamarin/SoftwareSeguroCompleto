@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { Modal, Button } from "react-bootstrap";
+import BASE_URLS from "../../../ApiConfig"; // Import the base URLs
 
 const PrestamosAdmin = () => {
   const [prestamos, setPrestamos] = useState([]);
@@ -13,7 +14,7 @@ const PrestamosAdmin = () => {
   useEffect(() => {
     const fetchPrestamos = async () => {
       try {
-        const response = await fetch('http://localhost:8080/api/prestamos/todos', {
+        const response = await fetch(`${BASE_URLS.PRESTAMOS}/todos`, { // Use BASE_URLS.PRESTAMOS
           method: 'GET',
           headers: {
             'Authorization': `Bearer ${token}`,
@@ -39,7 +40,7 @@ const PrestamosAdmin = () => {
 
   const handleAprobarPrestamo = async (idPrestamo) => {
     try {
-      const response = await fetch(`http://localhost:8080/api/prestamos/${idPrestamo}/aprobar`, {
+      const response = await fetch(`${BASE_URLS.PRESTAMOS}/${idPrestamo}/aprobar`, { // Use BASE_URLS.PRESTAMOS
         method: 'PUT',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -63,7 +64,7 @@ const PrestamosAdmin = () => {
 
   const handleDesaprobarPrestamo = async (idPrestamo) => {
     try {
-      const response = await fetch(`http://localhost:8080/api/prestamos/${idPrestamo}/desaprobar`, {
+      const response = await fetch(`${BASE_URLS.PRESTAMOS}/${idPrestamo}/desaprobar`, { // Use BASE_URLS.PRESTAMOS
         method: 'PUT',
         headers: {
           'Authorization': `Bearer ${token}`,

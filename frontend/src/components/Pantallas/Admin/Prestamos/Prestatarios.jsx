@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import BASE_URLS from "../../../../ApiConfig"; // Import the base URLs
 
 const Prestatarios = () => {
   const navigate = useNavigate();
@@ -19,13 +20,13 @@ const Prestatarios = () => {
     if (!token) {
       setError("No hay token de autenticación. Inicia sesión nuevamente.");
       setLoading(false);
-      navigate('/login'); // Redirect to login if no token
+      navigate('/login');
       return;
     }
 
     try {
       setError("");
-      const response = await fetch("http://localhost:8080/api/prestamos/usuarios-prestamos", {
+      const response = await fetch(`${BASE_URLS.PRESTAMOS}/usuarios-prestamos`, { // Use BASE_URLS.PRESTAMOS
         method: "GET",
         headers: {
           Authorization: `Bearer ${token}`,
@@ -49,7 +50,7 @@ const Prestatarios = () => {
   const handleDesbloquear = async (correo) => {
     const token = localStorage.getItem("token");
     try {
-      const response = await fetch("http://localhost:8080/api/usuarios/desbloquear", {
+      const response = await fetch(`${BASE_URLS.USUARIOS}/desbloquear`, { // Use BASE_URLS.USUARIOS
         method: "POST",
         headers: {
           Authorization: `Bearer ${token}`,
@@ -72,7 +73,7 @@ const Prestatarios = () => {
   const tienePrestamosAsociados = async (correo) => {
     const token = localStorage.getItem("token");
     try {
-      const response = await fetch(`http://localhost:8080/api/prestamos/usuario/correo/${correo}`, {
+      const response = await fetch(`${BASE_URLS.PRESTAMOS}/usuario/correo/${correo}`, { // Use BASE_URLS.PRESTAMOS
         method: "GET",
         headers: {
           Authorization: `Bearer ${token}`,
@@ -103,7 +104,7 @@ const Prestatarios = () => {
     if (!window.confirm("¿Estás seguro de eliminar este prestatario?")) return;
 
     try {
-      const response = await fetch(`http://localhost:8080/api/usuarios/${correo}`, {
+      const response = await fetch(`${BASE_URLS.USUARIOS}/${correo}`, { // Use BASE_URLS.USUARIOS
         method: "DELETE",
         headers: {
           Authorization: `Bearer ${token}`,
@@ -125,7 +126,7 @@ const Prestatarios = () => {
   const fetchUsuarioDetalles = async (correo) => {
     const token = localStorage.getItem("token");
     try {
-      const response = await fetch(`http://localhost:8080/api/usuarios/${correo}`, {
+      const response = await fetch(`${BASE_URLS.USUARIOS}/${correo}`, { // Use BASE_URLS.USUARIOS
         method: "GET",
         headers: {
           Authorization: `Bearer ${token}`,

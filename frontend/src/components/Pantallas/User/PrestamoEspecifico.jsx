@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { jwtDecode } from "jwt-decode";
 import "../../../styles/prestamoespecifico.css";
+import BASE_URLS from "../../../ApiConfig"; // Import the base URLs
 
 const PrestamoEspecifico = () => {
   const [montoSolicitado, setMontoSolicitado] = useState("");
@@ -52,7 +53,7 @@ const PrestamoEspecifico = () => {
 
     try {
       const response = await fetch(
-        `http://localhost:8080/api/usuarios/${datosUsuario.correo}/actualizar-finanzas`,
+        `${BASE_URLS.USUARIOS}/${datosUsuario.correo}/actualizar-finanzas`, // Use BASE_URLS.USUARIOS
         {
           method: "PUT",
           headers: {
@@ -159,7 +160,7 @@ const PrestamoEspecifico = () => {
     if (!datosUsuario) return;
 
     try {
-      const response = await fetch("http://localhost:8080/api/prestamos", {
+      const response = await fetch(`${BASE_URLS.PRESTAMOS}`, { // Use BASE_URLS.PRESTAMOS
         method: "POST",
         headers: {
           "Content-Type": "application/json",

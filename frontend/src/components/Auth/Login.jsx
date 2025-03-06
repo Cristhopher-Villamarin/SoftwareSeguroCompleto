@@ -5,13 +5,14 @@ import { FaArrowLeft, FaEye, FaEyeSlash } from "react-icons/fa";
 import DOMPurify from "dompurify";
 import { jwtDecode } from "jwt-decode";
 import "../../styles/Login.css";
+import BASE_URLS from "../../ApiConfig"; // Import the base URLs
 
-const Login = ({ setIsAuthenticated }) => { // Añadimos setIsAuthenticated como prop
+const Login = ({ setIsAuthenticated }) => {
   const [correo, setCorreo] = useState("");
   const [contrasena, setContrasena] = useState("");
   const [error, setError] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [showPassword, setShowPassword] = useState(false); // Estado para mostrar/ocultar contraseña
+  const [showPassword, setShowPassword] = useState(false);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -49,7 +50,7 @@ const Login = ({ setIsAuthenticated }) => { // Añadimos setIsAuthenticated como
     setIsSubmitting(true);
 
     try {
-      const response = await fetch("http://localhost:8080/api/usuarios/login", {
+      const response = await fetch(`${BASE_URLS.USUARIOS}/login`, { // Use BASE_URLS.USUARIOS
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -70,7 +71,7 @@ const Login = ({ setIsAuthenticated }) => { // Añadimos setIsAuthenticated como
       const token = data.token;
 
       localStorage.setItem("token", token);
-      setIsAuthenticated(true); // Actualizamos el estado de autenticación
+      setIsAuthenticated(true);
 
       const decodedToken = jwtDecode(token);
       const rol = decodedToken.rol;
@@ -137,7 +138,7 @@ const Login = ({ setIsAuthenticated }) => { // Añadimos setIsAuthenticated como
                     onChange={(e) => setContrasena(e.target.value)}
                     required
                     placeholder="Ingrese su contraseña"
-                    style={{ paddingRight: "2.5rem" }} // Espacio para el ícono
+                    style={{ paddingRight: "2.5rem" }}
                   />
                   <button
                     type="button"

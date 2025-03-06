@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import "bootstrap/dist/css/bootstrap.min.css";
 import { FaArrowLeft, FaEye, FaEyeSlash } from "react-icons/fa";
 import "../../styles/Login.css";
+import BASE_URLS from "../../ApiConfig"; // Import the base URLs
 
 const RestablecerContraseña = () => {
   const [token, setToken] = useState("");
@@ -41,7 +42,7 @@ const RestablecerContraseña = () => {
     setIsSubmitting(true);
 
     try {
-      const response = await fetch("http://localhost:8080/api/usuarios/restablecer-contrasena", {
+      const response = await fetch(`${BASE_URLS.USUARIOS}/restablecer-contrasena`, { // Use BASE_URLS.USUARIOS
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ token, nuevaContrasena }),

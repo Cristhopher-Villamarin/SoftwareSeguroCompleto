@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { jwtDecode } from "jwt-decode";
 import { toast } from "react-toastify";
+import BASE_URLS from "../../../ApiConfig"; // Import the base URLs
 
 const HomeUser = () => {
   const navigate = useNavigate();
@@ -55,7 +56,7 @@ const HomeUser = () => {
 
     try {
       const response = await fetch(
-        `http://localhost:8080/api/prestamos/usuario/correo/${usuarioEmail}`,
+        `${BASE_URLS.PRESTAMOS}/usuario/correo/${usuarioEmail}`, // Use BASE_URLS.PRESTAMOS
         {
           method: "GET",
           headers: {

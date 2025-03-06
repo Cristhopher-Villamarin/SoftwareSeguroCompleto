@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import "bootstrap/dist/css/bootstrap.min.css";
 import { FaArrowLeft } from "react-icons/fa";
 import "../../styles/Login.css"; // Reutilizamos los estilos de Login.css
+import BASE_URLS from "../../ApiConfig"; // Import the base URLs
 
 const RecuperarContraseña = () => {
   const [correo, setCorreo] = useState("");
@@ -24,7 +25,7 @@ const RecuperarContraseña = () => {
     setIsSubmitting(true);
 
     try {
-      const response = await fetch("http://localhost:8080/api/usuarios/solicitar-recuperacion", {
+      const response = await fetch(`${BASE_URLS.USUARIOS}/solicitar-recuperacion`, { // Use BASE_URLS.USUARIOS
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ correo }),

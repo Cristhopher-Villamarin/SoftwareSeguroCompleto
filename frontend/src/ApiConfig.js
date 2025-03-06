@@ -1,0 +1,12 @@
+// src/config/apiConfig.js
+
+const API_BASE_URL = "http://localhost:8080/api";
+
+// Define base URLs for each resource
+const BASE_URLS = {
+  USUARIOS: `${API_BASE_URL}/usuarios`,
+  PRESTAMOS: `${API_BASE_URL}/prestamos`,
+  CUOTAS: `${API_BASE_URL}/cuotas`,
+};
+
+export default BASE_URLS;

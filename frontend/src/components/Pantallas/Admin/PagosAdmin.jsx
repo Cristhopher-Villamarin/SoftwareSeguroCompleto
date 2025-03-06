@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable"; // Importa autoTable explícitamente
+import BASE_URLS from "../../../ApiConfig"; // Import the base URLs
 
 const PagosAdmin = () => {
   const navigate = useNavigate();
@@ -23,7 +24,7 @@ const PagosAdmin = () => {
       }
 
       try {
-        const cuotasResponse = await fetch("http://localhost:8080/api/cuotas/todos", {
+        const cuotasResponse = await fetch(`${BASE_URLS.CUOTAS}/todos`, { // Use BASE_URLS.CUOTAS
           method: "GET",
           headers: {
             Authorization: `Bearer ${token}`,
@@ -37,7 +38,7 @@ const PagosAdmin = () => {
 
         const cuotasData = await cuotasResponse.json();
 
-        const prestamosResponse = await fetch("http://localhost:8080/api/prestamos/todos", {
+        const prestamosResponse = await fetch(`${BASE_URLS.PRESTAMOS}/todos`, { // Use BASE_URLS.PRESTAMOS
           method: "GET",
           headers: {
             Authorization: `Bearer ${token}`,

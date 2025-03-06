@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { jwtDecode } from "jwt-decode";
+import BASE_URLS from "../../../ApiConfig"; // Import the base URLs
 
 const Pagos = () => {
   const [pagos, setPagos] = useState([]);
@@ -33,7 +34,7 @@ const Pagos = () => {
       try {
         // Obtener los préstamos del usuario
         const prestamoResponse = await fetch(
-          `http://localhost:8080/api/prestamos/usuario/correo/${correo}`,
+          `${BASE_URLS.PRESTAMOS}/usuario/correo/${correo}`, // Use BASE_URLS.PRESTAMOS
           {
             headers: {
               Authorization: `Bearer ${localStorage.getItem("token")}`,
@@ -60,7 +61,7 @@ const Pagos = () => {
 
         // Obtener las cuotas del préstamo activo
         const cuotasResponse = await fetch(
-          `http://localhost:8080/api/cuotas/prestamo/${prestamoActivo.idPrestamo}`,
+          `${BASE_URLS.CUOTAS}/prestamo/${prestamoActivo.idPrestamo}`, // Use BASE_URLS.CUOTAS
           {
             headers: {
               Authorization: `Bearer ${localStorage.getItem("token")}`,
