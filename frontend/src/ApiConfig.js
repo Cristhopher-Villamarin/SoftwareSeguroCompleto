@@ -1,8 +1,9 @@
 // src/config/apiConfig.js
 
-const API_BASE_URL = "http://52.146.36.169:8080/api";
+// Usa una variable de entorno para definir la URL base, con un valor por defecto para desarrollo local
+const API_BASE_URL = process.env.REACT_APP_API_URL || "http://localhost:8080/api";
 
-// Define base URLs for each resource
+// Define base URLs para cada recurso
 const BASE_URLS = {
   USUARIOS: `${API_BASE_URL}/usuarios`,
   PRESTAMOS: `${API_BASE_URL}/prestamos`,

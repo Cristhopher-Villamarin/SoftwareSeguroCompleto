@@ -13,11 +13,11 @@ public class CorsConfig {
         return new WebMvcConfigurer() {
             @Override
             public void addCorsMappings(CorsRegistry registry) {
-                registry.addMapping("/api/**") // Permite todas las rutas bajo "/api/"
-                        .allowedOrigins("http://localhost") // Permitir el frontend
-                        .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS") // Métodos permitidos
-                        .allowedHeaders("*") // Permitir todos los headers
-                        .allowCredentials(true); // Permitir cookies o credenciales
+                registry.addMapping("/api/**")
+                        .allowedOrigins("http://52.146.36.169") // IP pública de Azure y puerto del frontend
+                        .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS")
+                        .allowedHeaders("*")
+                        .allowCredentials(true);
             }
         };
     }

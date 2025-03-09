@@ -1,4 +1,4 @@
 -------------------------------------------------------------------------------
 Test set: com.prestamos.gestion_prestamos.GestionPrestamosApplicationTests
 -------------------------------------------------------------------------------
-Tests run: 1, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 10.50 s -- in com.prestamos.gestion_prestamos.GestionPrestamosApplicationTests
+Tests run: 1, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 10.99 s -- in com.prestamos.gestion_prestamos.GestionPrestamosApplicationTests

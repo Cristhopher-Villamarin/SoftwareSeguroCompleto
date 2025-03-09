@@ -1,55 +1,44 @@
 version: '3.8'
 
 services:
+  backend:
+    image: sebast25/gestion-prestamos-backend:latest
+    ports:
+      - "8080:8080" # Mapea el puerto 8080 del contenedor al 8080 de la máquina host
+    environment:
+      - DB_HOST=mysql
+      - DB_USERNAME=root
+      - DB_PASSWORD=sebastian
+      - MAIL_USERNAME=cristhophervillamarin7@gmail.com
+      - MAIL_PASSWORD=ayvq peua syeq aesn
+    depends_on:
+      - mysql
+    networks:
+      - app-network
+
   mysql:
     image: mysql:8.0
-    container_name: mysql-container
     environment:
-      MYSQL_ROOT_PASSWORD: sebastian
-      MYSQL_DATABASE: gestion_prestamos
+      - MYSQL_ROOT_PASSWORD=sebastian
+      - MYSQL_DATABASE=gestion_prestamos
+    ports:
+      - "3306:3306" # Opcional, para acceso externo si lo necesitas
     volumes:
       - mysql-data:/var/lib/mysql
     networks:
-      - prestamos-network
+      - app-network
 
-  gestion-prestamos-backend:
-    image: sebast25/gestion-prestamos-backend:v1.1  # Cambiado a v1.1
-    container_name: gestion-prestamos-backend-container
-    depends_on:
-      - mysql
+  frontend:
+    image: sebast25/gestion-prestamos-frontend:latest
     ports:
-      - "8080:8080"
-    environment:
-      - SPRING_DATASOURCE_URL=jdbc:mysql://mysql-container:3306/gestion_prestamos?useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true
-      - SPRING_DATASOURCE_USERNAME=root
-      - SPRING_DATASOURCE_PASSWORD=sebastian
-      - SPRING_JPA_HIBERNATE_DDL_AUTO=update
-      - SPRING_JPA_SHOW_SQL=true
-      - SPRING_JPA_DATABASE_PLATFORM=org.hibernate.dialect.MySQLDialect
-      - SPRING_MAIL_HOST=smtp.gmail.com
-      - SPRING_MAIL_PORT=587
-      - SPRING_MAIL_USERNAME=cristhophervillamarin7@gmail.com
-      - SPRING_MAIL_PASSWORD=ayvq peua syeq aesn
-      - SPRING_MAIL_PROPERTIES_MAIL_SMTP_AUTH=true
-      - SPRING_MAIL_PROPERTIES_MAIL_SMTP_STARTTLS_ENABLE=true
-      - FRONTEND_URL=http://52.146.36.169
-      - CORS_ALLOWED_ORIGINS=http://52.146.36.169
-    networks:
-      - prestamos-network
-
-  gestion-prestamos-frontend:
-    image: sebast25/gestion-prestamos-frontend:v1.1  # Cambiado a v1.1
-    container_name: gestion-prestamos-frontend-container
-    ports:
-      - "80:80"
-    networks:
-      - prestamos-network
+      - "80:80" # Mapea el puerto 80 del contenedor al 80 de la máquina host
     depends_on:
-      - gestion-prestamos-backend
+      - backend
+    networks:
+      - app-network
 
 networks:
-  prestamos-network:
-    name: prestamos-network
+  app-network:
     driver: bridge
 
 volumes:
