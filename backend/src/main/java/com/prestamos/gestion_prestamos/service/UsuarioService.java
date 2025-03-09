@@ -80,7 +80,7 @@ public class UsuarioService {
         mensaje.setTo(correo);
         mensaje.setSubject("Recuperación de contraseña");
 
-        String enlace = "http://localhost:3000/auth/restablecer";
+        String enlace = "http://localhost/auth/restablecer";
         mensaje.setText("Hola, para restablecer tu contraseña, copia el siguiente código de seguridad: " + token + " y haz clic en el siguiente enlace: " + enlace);
 
         mailSender.send(mensaje);

@@ -1,0 +1,59 @@
+version: '3.8'
+
+services:
+  mysql:
+    image: mysql:8.0
+    container_name: mysql-container
+    environment:
+      MYSQL_ROOT_PASSWORD: sebastian
+      MYSQL_DATABASE: gestion_prestamos
+    volumes:
+      - mysql-data:/var/lib/mysql
+    # Comentamos el puerto para no exponerlo al host (opcional, según tus necesidades)
+    ports:
+      - "3306:3306"
+    networks:
+      - prestamos-network
+
+  gestion-prestamos-backend:
+    image: sebast25/gestion-prestamos-backend:latest
+    container_name: gestion-prestamos-backend-container
+    depends_on:
+      - mysql
+    ports:
+      - "8080:8080"
+    environment:
+      - SPRING_DATASOURCE_URL=jdbc:mysql://mysql-container:3306/gestion_prestamos?useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true
+      - SPRING_DATASOURCE_USERNAME=root
+      - SPRING_DATASOURCE_PASSWORD=sebastian
+      - SPRING_JPA_HIBERNATE_DDL_AUTO=update
+      - SPRING_JPA_SHOW_SQL=true
+      - SPRING_JPA_DATABASE_PLATFORM=org.hibernate.dialect.MySQLDialect
+      - SPRING_MAIL_HOST=smtp.gmail.com
+      - SPRING_MAIL_PORT=587
+      - SPRING_MAIL_USERNAME=cristhophervillamarin7@gmail.com
+      - SPRING_MAIL_PASSWORD=ayvq peua syeq aesn
+      - SPRING_MAIL_PROPERTIES_MAIL_SMTP_AUTH=true
+      - SPRING_MAIL_PROPERTIES_MAIL_SMTP_STARTTLS_ENABLE=true
+      - FRONTEND_URL=http://localhost # Para el enlace de restablecimiento de contraseña
+      - CORS_ALLOWED_ORIGINS=http://localhost # Para la configuración de CORS
+    networks:
+      - prestamos-network
+
+  gestion-prestamos-frontend:
+    image: sebast25/gestion-prestamos-frontend:latest # Cambiado a la imagen local
+    container_name: gestion-prestamos-frontend-container
+    ports:
+      - "80:80"
+    networks:
+      - prestamos-network
+    depends_on:
+      - gestion-prestamos-backend
+
+networks:
+  prestamos-network:
+    name: prestamos-network
+    driver: bridge
+
+volumes:
+  mysql-data:
