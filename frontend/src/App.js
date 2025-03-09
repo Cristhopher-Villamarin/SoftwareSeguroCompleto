@@ -20,6 +20,7 @@ import PrestamosAdmin from "./components/Pantallas/Admin/PrestamosAdmin";
 import SolicitudesAdmin from "./components/Pantallas/Admin/SolicitudesAdmin";
 import RecuperarContraseña from "./components/Auth/RecuperarContraseña";
 import RestablecerContraseña from "./components/Auth/RestablecerContraseña";
+import LogsAdmin from "./components/Pantallas/Admin/Prestamos/LogsAdmin";
 
 
 function App() {
@@ -56,7 +57,7 @@ function App() {
         />
         <Route path="/auth/registro" element={<Register />} />
         <Route path="/auth/recuperar" element={<RecuperarContraseña />} />
-        <Route path="/auth/restablecer" element={<RestablecerContraseña />} />
+        <Route path="/auth/restablecer" element={<RestablecerContraseña />} />
 
         {/* Rutas protegidas para usuarios */}
         <Route
@@ -88,6 +89,7 @@ function App() {
           <Route path="pagosAdmin" element={<PagosAdmin />} />
           <Route path="prestamosAdmin" element={<PrestamosAdmin />} />
           <Route path="solicitudesAdmin" element={<SolicitudesAdmin />} />
+          <Route path="logsAdmin" element={<LogsAdmin />} />
         </Route>
 
         {/* Ruta por defecto para rutas no encontradas */}

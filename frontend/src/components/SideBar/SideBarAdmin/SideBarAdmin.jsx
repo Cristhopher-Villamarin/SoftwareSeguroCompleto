@@ -1,5 +1,5 @@
 import { Link, useNavigate } from "react-router-dom";
-import { FaMoneyCheckAlt, FaCalculator, FaCreditCard, FaSignOutAlt } from "react-icons/fa";
+import { FaMoneyCheckAlt, FaCalculator, FaCreditCard, FaSignOutAlt, FaFileAlt } from "react-icons/fa";
 import "../../../styles/sideBar.css"; // Importamos los estilos
 
 const SideBarAdmin = () => {
@@ -35,7 +35,12 @@ const SideBarAdmin = () => {
             <FaCreditCard className="icon" /> Pagos
           </Link>
         </li>
-        
+        <li>
+          <Link to="/admin/logsAdmin">
+            <FaFileAlt className="icon" /> Logs
+          </Link>
+        </li>
+
       </ul>
 
       {/* 🔹 Botón de Salir */}
