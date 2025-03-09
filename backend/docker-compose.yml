@@ -9,14 +9,11 @@ services:
       MYSQL_DATABASE: gestion_prestamos
     volumes:
       - mysql-data:/var/lib/mysql
-    # Comentamos el puerto para no exponerlo al host (opcional, según tus necesidades)
-    ports:
-      - "3306:3306"
     networks:
       - prestamos-network
 
   gestion-prestamos-backend:
-    image: sebast25/gestion-prestamos-backend:latest
+    image: sebast25/gestion-prestamos-backend:v1.1  # Cambiado a v1.1
     container_name: gestion-prestamos-backend-container
     depends_on:
       - mysql
@@ -35,13 +32,13 @@ services:
       - SPRING_MAIL_PASSWORD=ayvq peua syeq aesn
       - SPRING_MAIL_PROPERTIES_MAIL_SMTP_AUTH=true
       - SPRING_MAIL_PROPERTIES_MAIL_SMTP_STARTTLS_ENABLE=true
-      - FRONTEND_URL=http://localhost # Para el enlace de restablecimiento de contraseña
-      - CORS_ALLOWED_ORIGINS=http://localhost # Para la configuración de CORS
+      - FRONTEND_URL=http://52.146.36.169
+      - CORS_ALLOWED_ORIGINS=http://52.146.36.169
     networks:
       - prestamos-network
 
   gestion-prestamos-frontend:
-    image: sebast25/gestion-prestamos-frontend:latest # Cambiado a la imagen local
+    image: sebast25/gestion-prestamos-frontend:v1.1  # Cambiado a v1.1
     container_name: gestion-prestamos-frontend-container
     ports:
       - "80:80"
